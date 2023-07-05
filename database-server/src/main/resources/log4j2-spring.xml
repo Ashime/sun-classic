@@ -1,0 +1,53 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<Configuration>
+    <Properties>
+        <Property name = "server-name">DatabaseServer</Property>
+        <Property name = "log-path">./Logs/${server-name}</Property>
+        <Property name = "log-pattern">[%-level]%d{[yyyy-MM-dd][HH:mm:ss.SSS]}[%t] %c{1} - %msg%n</Property>
+    </Properties>
+    <Appenders>
+
+        <Console name = "CONSOLE" target = "SYSTEM_OUT">
+            <PatternLayout>
+                <pattern>${log-pattern}</pattern>
+            </PatternLayout>
+        </Console>
+
+        <RollingFile name = "INFO" filePattern = "${log-path}/info/%d{yyyy-MM}/${server-name} %d{MM-dd}.log">
+            <LevelRangeFilter minLevel = "INFO" maxLevel = "TRACE" onMatch = "ACCEPT" onMismatch = "DENY"/>
+            <PatternLayout>
+                <pattern>${log-pattern}</pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval = "1" modulate = "true"/>
+            </Policies>
+        </RollingFile>
+
+        <RollingFile name = "WARN" filePattern = "${log-path}/warn/%d{yyyy-MM}/${server-name} %d{MM-dd}.log">
+            <LevelRangeFilter minLevel = "WARN" maxLevel = "WARN" onMatch = "ACCEPT" onMismatch = "DENY"/>
+            <PatternLayout>
+                <pattern>${log-pattern}</pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval = "1" modulate = "true"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name = "ERROR" filePattern = "${log-path}/error/%d{yyyy-MM}/${server-name} %d{MM-dd}.log">
+            <LevelRangeFilter minLevel = "ERROR" maxLevel = "ERROR" onMatch = "ACCEPT" onMismatch = "DENY"/>
+            <PatternLayout>
+                <pattern>${log-pattern}</pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval = "1" modulate = "true"/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Root>
+            <!--<AppenderRef ref = "INFO"      level = "INFO"/>-->
+            <AppenderRef ref = "WARN"      level = "WARN"/>
+            <AppenderRef ref = "ERROR"     level = "ERROR"/>
+            <AppenderRef ref = "CONSOLE"   level = "INFO"/>
+        </Root>
+    </Loggers>
+</Configuration>
