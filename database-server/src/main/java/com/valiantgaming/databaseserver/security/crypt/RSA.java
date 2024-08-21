@@ -1,14 +1,12 @@
 package com.valiantgaming.databaseserver.security.crypt;
 
 import lombok.SneakyThrows;
-import lombok.extern.log4j.Log4j2;
 
 import javax.crypto.Cipher;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 
-@Log4j2
 public class RSA
 {
     private static Cipher cipher;

@@ -1,11 +1,23 @@
 package com.valiantgaming.databaseserver.utility;
 
+import org.springframework.security.crypto.codec.Hex;
+
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class Utility
 {
+    public static String byteArrayToHexString(byte[] input)
+    {
+        return new String(Hex.encode(input)).toUpperCase();
+    }
+
+    public static byte[] hexStringToByteArray(String input)
+    {
+        return Hex.decode(input);
+    }
+
     public static void strncpy(byte[] input, byte[] output, int start)
     {
         for (int i = 0; i < input.length; i++)

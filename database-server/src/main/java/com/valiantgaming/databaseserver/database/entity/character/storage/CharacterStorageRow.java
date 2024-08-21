@@ -17,36 +17,36 @@ public class CharacterStorageRow
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int rowID;
 
-    @Column(name = "SlotID1")
-    private int slotID1;
+    @Column(name = "Slot1")
+    private int slot1;
 
-    @Column(name = "SlotID2")
-    private int slotID2;
+    @Column(name = "Slot2")
+    private int slot2;
 
-    @Column(name = "SlotID3")
-    private int slotID3;
+    @Column(name = "Slot3")
+    private int slot3;
 
-    @Column(name = "SlotID4")
-    private int slotID4;
+    @Column(name = "Slot4")
+    private int slot4;
 
-    @Column(name = "SlotID5")
-    private int slotID5;
+    @Column(name = "Slot5")
+    private int slot5;
 
-    @Column(name = "SlotID6")
-    private int slotID6;
+    @Column(name = "Slot6")
+    private int slot6;
 
-    @Column(name = "SlotID7")
-    private int slotID7;
+    @Column(name = "Slot7")
+    private int slot7;
 
-    @Column(name = "SlotID8")
-    private int slotID8;
+    @Column(name = "Slot8")
+    private int slot8;
 
-    @Column(name = "SlotID9")
-    private int slotID9;
+    @Column(name = "Slot9")
+    private int slot9;
 
-    @Column(name = "SlotID10")
-    private int slotID10;
+    @Column(name = "Slot10")
+    private int slot10;
 
-    @Column(name = "CreateDate")
-    private LocalDateTime createDate;
+    @Column(name = "ModifiedDate")
+    private LocalDateTime modifiedDate;
 }

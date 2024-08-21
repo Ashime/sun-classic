@@ -1,15 +1,33 @@
 package com.valiantgaming.databaseserver;
 
-import lombok.extern.log4j.Log4j2;
+import com.valiantgaming.databaseserver.config.DatabaseServerConfig;
+import com.valiantgaming.databaseserver.database.DatabaseManager;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@Log4j2
 @SpringBootApplication
 public class DatabaseServerApplication
 {
     public static void main(String[] args)
     {
-        SpringApplication.run(DatabaseServerApplication.class, args);
+        SpringApplication.run(DatabaseServer.class, args);
+    }
+
+    public static class DatabaseServer
+    {
+        public DatabaseServer()
+        {
+            /*
+                1. Post Spring Database Tasks
+                    >> Database Manager
+                        a. Encryption Keys
+                        b. Incoming Whitelisted IPs
+             */
+            DatabaseServerConfig.init();
+            DatabaseManager.getInstance();
+
+//            NioServer nioServer = new NioServer();
+//            nioServer.init();
+        }
     }
 }

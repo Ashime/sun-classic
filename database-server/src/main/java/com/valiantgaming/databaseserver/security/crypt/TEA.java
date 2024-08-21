@@ -2,13 +2,11 @@ package com.valiantgaming.databaseserver.security.crypt;
 
 import com.valiantgaming.databaseserver.utility.Utility;
 import lombok.SneakyThrows;
-import lombok.extern.log4j.Log4j2;
 
 import java.security.SecureRandom;
 import java.util.Arrays;
 
 // TODO: Update code to remove unnecessary methods and do code clean up.
-@Log4j2
 public class TEA
 {
     private static byte[] key;
@@ -53,7 +51,7 @@ public class TEA
         return result;
     }
 
-    public static byte[] passwordDecode(byte[] passInput, byte[] keyInput)
+    public static byte[] decryptPassword(byte[] passInput, byte[] keyInput)
     {
         result = new byte[24];
         int keyValue = Utility.byteArrayToInt(keyInput);
