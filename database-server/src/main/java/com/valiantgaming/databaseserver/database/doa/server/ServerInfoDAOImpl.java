@@ -1,6 +1,6 @@
-package com.valiantgaming.databaseserver.database.dao.server;
+package com.valiantgaming.databaseserver.database.doa.server;
 
-import com.valiantgaming.databaseserver.database.entity.server.ServerInfo;
+import com.valiantgaming.databaseserver.database.entity.ServerInfo;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.StoredProcedureQuery;
 import lombok.Getter;
@@ -44,6 +44,7 @@ public class ServerInfoDAOImpl implements ServerInfoDAO
     {
         StoredProcedureQuery query = entityManager.createNamedStoredProcedureQuery("GetServerInfo")
                 .setParameter("serverName", serverName);
+
 
         return 0;
     }

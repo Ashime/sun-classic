@@ -44,6 +44,13 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		<!-- BOOT DEV TOOLS -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
 		<!-- BOOT INTEGRATION STARTER -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -59,7 +66,7 @@
 		<dependency>
 			<groupId>org.springframework.integration</groupId>
 			<artifactId>spring-integration-ip</artifactId>
-			<version>6.3.2</version>
+			<version>6.1.0</version>
 		</dependency>
 		<!-- SECURITY STARTER -->
 		<dependency>
@@ -91,33 +98,22 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-quartz</artifactId>
 		</dependency>
-		<!-- LOGGING -->
+		<!-- LOG4J2 -->
 		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-api</artifactId>
-			<version>3.0.0-beta2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-core</artifactId>
-			<version>3.0.0-beta2</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-log4j2</artifactId>
 		</dependency>
 		<!-- =============== NETTY IO =============== -->
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-all</artifactId>
-			<version>5.0.0.Alpha2</version>
+			<version>4.1.93.Final</version>
 		</dependency>
 		<!-- ================ LOMBOK ================ -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-		</dependency>
-		<!-- ================ INI4J ================ -->
-		<dependency>
-			<groupId>org.ini4j</groupId>
-			<artifactId>ini4j</artifactId>
-			<version>0.5.4</version>
+			<optional>true</optional>
 		</dependency>
 
 		<!-- ================ TESTING =============== -->

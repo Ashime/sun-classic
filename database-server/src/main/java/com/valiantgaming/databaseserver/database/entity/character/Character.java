@@ -21,14 +21,6 @@ public class Character
     private int characterID;
 
     @NotNull
-    @Column(name = "CharacterStorageID")
-    private int characterStorageID;
-
-    @NotNull
-    @Column(name = "EquipmentID")
-    private int equipmentID;
-
-    @NotNull
     @Column(name = "InventoryID")
     private int inventoryID;
 
@@ -36,7 +28,11 @@ public class Character
     @Column(name = "SkillInventoryID")
     private int skillInventoryID;
 
-    @NotBlank
+    @NotNull
+    @Column(name = "CharacterStorageID")
+    private int characterStorageID;
+
+    @NotNull @NotBlank
     @Length(min = 4, max = 25)
     @Column(name = "Name")
     private String characterName;
@@ -45,16 +41,12 @@ public class Character
     @Column(name = "Level")
     private short level;
 
-    @NotBlank
+    @NotNull @NotBlank
     @Column(name = "Class")
     private String className;
 
-    @NotBlank
-    @Column(name = "Race")
-    private String race;
-
     // Male = 2 and Female = 1, 0 = NA
-    @NotBlank
+    @NotNull @NotBlank
     @Column(name = "Gender")
     private short gender;
 
@@ -115,18 +107,6 @@ public class Character
     private short remainSkillPoints;
 
     @NotNull
-    @Column(name = "RemainResets")
-    private short remainResets;
-
-    @NotNull
-    @Column(name = "IsInDeletion")
-    private boolean inDeletion;
-
-    @NotBlank
-    @Column(name = "DeletionDate")
-    private LocalDateTime deletionDate;
-
-    @NotNull
     @Column(name = "CreateDate")
     private LocalDateTime createDate;
 
@@ -137,14 +117,12 @@ public class Character
     public String toString() {
         return "Character{" +
                 "characterID=" + characterID +
-                ", characterStorageID=" + characterStorageID +
-                ", equipmentID=" + equipmentID +
                 ", inventoryID=" + inventoryID +
                 ", skillInventoryID=" + skillInventoryID +
+                ", characterStorageID=" + characterStorageID +
                 ", characterName='" + characterName + '\'' +
                 ", level=" + level +
                 ", className='" + className + '\'' +
-                ", race='" + race + '\'' +
                 ", gender=" + gender +
                 ", sd=" + sd +
                 ", maxSD=" + maxSD +
@@ -160,9 +138,6 @@ public class Character
                 ", remainStatPoints=" + remainStatPoints +
                 ", usedStatPoints=" + usedStatPoints +
                 ", remainSkillPoints=" + remainSkillPoints +
-                ", remainResets=" + remainResets +
-                ", inDeletion=" + inDeletion +
-                ", deletionDate=" + deletionDate +
                 ", createDate=" + createDate +
                 ", modifiedDate=" + modifiedDate +
                 '}';

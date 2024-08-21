@@ -1,25 +1,26 @@
-package com.valiantgaming.databaseserver.network.server.config;
+package com.valiantgaming.databaseserver.network.server;
 
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.DirectChannel;
-import org.springframework.integration.config.EnableIntegration;
 import org.springframework.integration.ip.tcp.TcpInboundGateway;
 import org.springframework.integration.ip.tcp.connection.AbstractServerConnectionFactory;
 import org.springframework.integration.ip.tcp.connection.TcpNioServerConnectionFactory;
 import org.springframework.messaging.MessageChannel;
 
+
 // https://docs.spring.io/spring-integration/reference/html/ip.html#testing-connections
 
-@EnableIntegration
+@Log4j2
 @Configuration
 public class TcpServerConfig
 {
-    @Value("${server.ipAddress}")
+    @Value("${server.s2s.ipAddress}")
     private String ip;
 
-    @Value("${server.port}")
+    @Value("${server.s2s.portNumber}")
     private int port;
 
     @Value("${server.s2s.bufferSize}")
@@ -29,7 +30,7 @@ public class TcpServerConfig
     private int timeOut;
 
     @Bean
-    public TcpNioServerConnectionFactory serverConnectionFactory()
+    public AbstractServerConnectionFactory serverConnectionFactory()
     {
         TcpNioServerConnectionFactory serverConnectionFactory = new TcpNioServerConnectionFactory(port);
         serverConnectionFactory.setLocalAddress(ip);

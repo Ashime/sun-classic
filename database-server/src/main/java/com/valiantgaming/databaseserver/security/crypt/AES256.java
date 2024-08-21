@@ -1,35 +1,27 @@
 package com.valiantgaming.databaseserver.security.crypt;
 
-import com.valiantgaming.databaseserver.utility.Utility;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.security.SecureRandom;
 
 @Log4j2
 public class AES256
 {
-    private static final int keySize = 256; // 32 bytes
+    private static final int keySize = 256;
     private static final int ivLength = 12;
-    private static final int tagLength = 128; // 16 bytes
+    private static final int tagLength = 128;
 
-    private static Cipher cipher;
-    private static SecretKey secretKey;
-    private static GCMParameterSpec gcmParameterSpec;
-
-    private static final String encFileName = "./Config/DatabaseServer/key.enc";
-
-    @SneakyThrows
+    @Autowired
     public AES256()
     {
-        cipher = Cipher.getInstance("AES/GCM/NoPadding");
+
     }
 
     @SneakyThrows
@@ -51,30 +43,22 @@ public class AES256
     }
 
     @SneakyThrows
-    public void encryptFile(String key, String iv, byte[] message)
+    public static void encryptFile(SecretKey key, byte[] iv, String fileName, byte[] message)
     {
-        secretKey = new SecretKeySpec(Utility.hexStringToByteArray(key), "AES");
-        gcmParameterSpec = new GCMParameterSpec(tagLength, Utility.hexStringToByteArray(iv));
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey, gcmParameterSpec);
+        // TODO: Ensure the key and iv are stored in the database.
 
-        byte[] encMessage = cipher.doFinal(message);
+        // output: [file_name].enc
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        SecretKeySpec keySpec = new SecretKeySpec(key.getEncoded(), "AES");
 
-        FileOutputStream fileOutStream = new FileOutputStream(encFileName);
-        fileOutStream.write(encMessage);
-        fileOutStream.close();
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(tagLength, iv);
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmParameterSpec);
+
+        // TODO: Put message in file if exists (otherwise create) and encrypt the file.
     }
 
-    @SneakyThrows
-    public String decryptFile(String key, String iv)
+    public static void decryptFile()
     {
-        FileInputStream fileInStream = new FileInputStream(encFileName);
-        byte[] encMessage = fileInStream.readAllBytes();
-        fileInStream.close();
-
-        secretKey = new SecretKeySpec(Utility.hexStringToByteArray(key), "AES");
-        gcmParameterSpec = new GCMParameterSpec(tagLength, Utility.hexStringToByteArray(iv));
-        cipher.init(Cipher.DECRYPT_MODE, secretKey, gcmParameterSpec);
-
-        return Utility.byteArrayToHexString(cipher.doFinal(encMessage));
+        // output: [file_name].txt
     }
 }
