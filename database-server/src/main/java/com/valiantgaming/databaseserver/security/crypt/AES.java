@@ -14,7 +14,7 @@ import java.io.FileOutputStream;
 import java.security.SecureRandom;
 
 @Log4j2
-public class AES256
+public class AES
 {
     private static final int keySize = 256; // 32 bytes
     private static final int ivLength = 12;
@@ -27,7 +27,7 @@ public class AES256
     private static final String encFileName = "./Config/DatabaseServer/key.enc";
 
     @SneakyThrows
-    public AES256()
+    public AES()
     {
         cipher = Cipher.getInstance("AES/GCM/NoPadding");
     }

@@ -16,7 +16,7 @@ import java.security.SecureRandom;
 
 @Log4j2
 @NoArgsConstructor
-public class SHA512
+public class SHA
 {
     private static final int hmacKeySize = 64;
     @Getter @Setter
@@ -44,6 +44,6 @@ public class SHA512
 
     public static void setHmacKey(String hmacKey)
     {
-        SHA512.hmacKey = Utility.hexStringToByteArray(hmacKey);
+        SHA.hmacKey = Utility.hexStringToByteArray(hmacKey);
     }
 }

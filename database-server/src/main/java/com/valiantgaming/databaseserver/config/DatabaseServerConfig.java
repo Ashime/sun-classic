@@ -1,8 +1,8 @@
 package com.valiantgaming.databaseserver.config;
 
 import com.valiantgaming.databaseserver.network.server.NioServer;
-import com.valiantgaming.databaseserver.security.crypt.Bcrypt;
-import com.valiantgaming.databaseserver.security.hash.SHA512;
+import com.valiantgaming.databaseserver.security.crypt.BCRYPT;
+import com.valiantgaming.databaseserver.security.hash.SHA;
 import org.ini4j.Wini;
 
 import java.io.File;
@@ -17,8 +17,8 @@ public class DatabaseServerConfig
         ini.setFile(new File(fileName));
 
         // [SECURITY]
-        SHA512.setRecreateHmacKey(ini.get("SECURITY", "RECREATE_HMAC_KEY", boolean.class));
-        Bcrypt.setLogRounds(ini.get("SECURITY", "BCRYPT_ROUNDS", int.class));
+        SHA.setRecreateHmacKey(ini.get("SECURITY", "RECREATE_HMAC_KEY", boolean.class));
+        BCRYPT.setLogRounds(ini.get("SECURITY", "BCRYPT_ROUNDS", int.class));
 
         // [SERVER]
         NioServer.setIpAddress(ini.get("SERVER", "IP_ADDRESS", String.class));

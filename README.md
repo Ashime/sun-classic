@@ -1,5 +1,13 @@
 ![SunClassicLogo](src/main/resources/SunClassic-Logo-Transparent.png)
 # SUN Classic
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/Ashime/sun-classic/maven.yml)
+[![CodeQL](https://github.com/Ashime/sun-classic/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/Ashime/sun-classic/actions/workflows/github-code-scanning/codeql)
+[![Dependabot Updates](https://github.com/Ashime/sun-classic/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/Ashime/sun-classic/actions/workflows/dependabot/dependabot-updates)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/45c4c918abe542449d5673d8720a99e4)](https://app.codacy.com/gh/Ashime/sun-classic/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/Ashime/sun-classic)
+![GitHub License](https://img.shields.io/github/license/Ashime/sun-classic)
+![GitHub repo size](https://img.shields.io/github/repo-size/Ashime/sun-classic)
+
 > This project developed using the English SUN Classic 2.4.0.2 client. This project has multiple modules inside, such as LoginServer folder contains the LoginServer module. Each module has their own README.md. The license applies to all modules within the project. Each server, Login, Game, etc. are a Maven project built in IntelliJ IDEA Community.
 
 ## ❈ Requirements

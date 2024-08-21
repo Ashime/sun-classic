@@ -6,7 +6,7 @@ public class PacketCrypt
     public static byte[] decryptPacket(byte[] input)
     {
         // decrypt packet with RSA.
-        // decrypt message with AES256.
+        // decrypt message with AES.
         return new byte[]{0x00};
     }
 }
