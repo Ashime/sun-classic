@@ -19,49 +19,43 @@ public class SkillInventoryRow
     private int rowID;
 
     @NotNull
-    @Column(name = "Number")
+    @Column(name = "RowNumber")
     private short rowNumber;
 
-    @NotNull
-    @Column(name = "SlotID1")
-    private int slotID1;
+    @Column(name = "Slot1")
+    private int slot1;
 
-    @NotNull
-    @Column(name = "SlotID2")
-    private int slotID2;
+    @Column(name = "Slot2")
+    private int slot2;
 
-    @NotNull
-    @Column(name = "SlotID3")
-    private int slotID3;
+    @Column(name = "Slot3")
+    private int slot3;
 
-    @NotNull
-    @Column(name = "SlotID4")
-    private int slotID4;
+    @Column(name = "Slot4")
+    private int slot4;
 
-    @NotNull
-    @Column(name = "SlotID5")
-    private int slotID5;
+    @Column(name = "Slot5")
+    private int slot5;
 
-    @NotNull
-    @Column(name = "SlotID6")
-    private int slotID6;
+    @Column(name = "Slot6")
+    private int slot6;
 
-    @NotNull
-    @Column(name = "CreateDate")
-    private LocalDateTime createDate;
+    @Column(name = "ModifiedDate")
+    private LocalDateTime modifiedDate;
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "SkillInventoryRow{" +
                 "rowID=" + rowID +
                 ", rowNumber=" + rowNumber +
-                ", slotID1=" + slotID1 +
-                ", slotID2=" + slotID2 +
-                ", slotID3=" + slotID3 +
-                ", slotID4=" + slotID4 +
-                ", slotID5=" + slotID5 +
-                ", slotID6=" + slotID6 +
-                ", createDate=" + createDate +
+                ", slot1=" + slot1 +
+                ", slot2=" + slot2 +
+                ", slot3=" + slot3 +
+                ", slot4=" + slot4 +
+                ", slot5=" + slot5 +
+                ", slot6=" + slot6 +
+                ", modifiedDate=" + modifiedDate +
                 '}';
     }
 }

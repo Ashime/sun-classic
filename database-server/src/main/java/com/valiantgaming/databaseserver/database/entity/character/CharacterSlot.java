@@ -15,38 +15,38 @@ public class CharacterSlot
 {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "AccountID")
-    private int accountID;
+    @Column(name = "CharacterSlotID")
+    private int characterSlotID;
 
-    @Column(name = "CharacterSlot1")
-    private int characterSlot1;
+    @Column(name = "Slot1")
+    private int slot1;
 
-    @Column(name = "CharacterSlot2")
-    private int characterSlot2;
+    @Column(name = "Slot2")
+    private int slot2;
 
-    @Column(name = "CharacterSlot3")
-    private int characterSlot3;
+    @Column(name = "Slot3")
+    private int slot3;
 
-    @Column(name = "CharacterSlot4")
-    private int characterSlot4;
+    @Column(name = "Slot4")
+    private int slot4;
 
-    @Column(name = "CharacterSlot5")
-    private int characterSlot5;
+    @Column(name = "Slot5")
+    private int slot5;
 
-    @Column(name = "CharacterSlot6")
-    private int characterSlot6;
+    @Column(name = "Slot6")
+    private int slot6;
 
-    @Column(name = "CharacterSlot7")
-    private int characterSlot7;
+    @Column(name = "Slot7")
+    private int slot7;
 
-    @Column(name = "CharacterSlot8")
-    private int characterSlot8;
+    @Column(name = "Slot8")
+    private int slot8;
 
-    @Column(name = "CharacterSlot9")
-    private int characterSlot9;
+    @Column(name = "Slot9")
+    private int slot9;
 
-    @Column(name = "CharacterSlot10")
-    private int characterSlot10;
+    @Column(name = "Slot10")
+    private int slot10;
 
     @NotNull
     @Column(name = "IsSlot7Locked")
@@ -72,19 +72,20 @@ public class CharacterSlot
     private LocalDateTime modifiedDate;
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "CharacterSlot{" +
-                "accountID=" + accountID +
-                ", characterSlot1=" + characterSlot1 +
-                ", characterSlot2=" + characterSlot2 +
-                ", characterSlot3=" + characterSlot3 +
-                ", characterSlot4=" + characterSlot4 +
-                ", characterSlot5=" + characterSlot5 +
-                ", characterSlot6=" + characterSlot6 +
-                ", characterSlot7=" + characterSlot7 +
-                ", characterSlot8=" + characterSlot8 +
-                ", characterSlot9=" + characterSlot9 +
-                ", characterSlot10=" + characterSlot10 +
+                "characterSlotID=" + characterSlotID +
+                ", slot1=" + slot1 +
+                ", slot2=" + slot2 +
+                ", slot3=" + slot3 +
+                ", slot4=" + slot4 +
+                ", slot5=" + slot5 +
+                ", slot6=" + slot6 +
+                ", slot7=" + slot7 +
+                ", slot8=" + slot8 +
+                ", slot9=" + slot9 +
+                ", slot10=" + slot10 +
                 ", slot7locked=" + slot7locked +
                 ", slot8locked=" + slot8locked +
                 ", slot9locked=" + slot9locked +

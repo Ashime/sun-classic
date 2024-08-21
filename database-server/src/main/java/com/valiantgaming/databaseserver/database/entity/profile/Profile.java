@@ -1,4 +1,4 @@
-package com.valiantgaming.databaseserver.database.entity;
+package com.valiantgaming.databaseserver.database.entity.profile;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;

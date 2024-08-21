@@ -1,4 +1,4 @@
-package com.valiantgaming.databaseserver.database.entity;
+package com.valiantgaming.databaseserver.database.entity.encryption;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -9,6 +9,39 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+@NamedStoredProcedureQueries
+({
+        @NamedStoredProcedureQuery
+        (
+            name = "AddEncryptionKey",
+            procedureName = "AddEncryptionKey",
+            resultClasses = String.class,
+            parameters =
+                {
+                    @StoredProcedureParameter
+                    (
+                        name = "encryptionKey",
+                        type = EncryptionKey.class,
+                        mode = ParameterMode.IN
+                    )
+                }
+        ),
+        @NamedStoredProcedureQuery
+        (
+            name = "GetEncryptionKey",
+            procedureName = "GetEncryptionKey",
+            resultClasses = EncryptionKey.class,
+            parameters =
+                {
+                    @StoredProcedureParameter
+                    (
+                        name = "keyName",
+                        type = String.class,
+                        mode = ParameterMode.IN
+                    )
+                }
+        )
+})
 @Table @Entity
 @Getter @Setter
 @NoArgsConstructor
@@ -39,7 +72,8 @@ public class EncryptionKey
     private LocalDateTime modifiedDate;
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "EncryptionKey{" +
                 "keyID=" + keyID +
                 ", keyName='" + keyName + '\'' +

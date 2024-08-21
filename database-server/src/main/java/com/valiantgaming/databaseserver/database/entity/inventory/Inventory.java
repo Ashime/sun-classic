@@ -79,6 +79,10 @@ public class Inventory
     private int rowID15;
 
     @NotBlank
+    @Column(name = "Heim")
+    private long heim;
+
+    @NotBlank
     @Column(name = "CreateDate")
     private LocalDateTime createDate;
 
@@ -102,6 +106,7 @@ public class Inventory
                 ", rowID13=" + rowID13 +
                 ", rowID14=" + rowID14 +
                 ", rowID15=" + rowID15 +
+                ", heim=" + heim +
                 ", createDate=" + createDate +
                 '}';
     }
