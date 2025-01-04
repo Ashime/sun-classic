@@ -1,6 +1,5 @@
 package com.valiantgaming.databaseserver.database;
 
-import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.hibernate.Session;
@@ -13,8 +12,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 @Log4j2
 public class HibernateSession
 {
-    @Getter
-    private static Session session = null;
     private static SessionFactory sessionFactory = null;
     private static StandardServiceRegistry registry = null;
 
@@ -54,7 +51,6 @@ public class HibernateSession
      */
     public static Session createSession()
     {
-        session = sessionFactory.openSession();
-        return session;
+        return sessionFactory.openSession();
     }
 }

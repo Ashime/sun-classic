@@ -49,10 +49,6 @@ public class Character
     @Column(name = "Class")
     private String className;
 
-    @NotBlank
-    @Column(name = "Race")
-    private String race;
-
     // Male = 2 and Female = 1, 0 = NA
     @NotBlank
     @Column(name = "Gender")
@@ -122,6 +118,10 @@ public class Character
     @Column(name = "IsInDeletion")
     private boolean inDeletion;
 
+    @NotNull
+    @Column(name = "DeletionCode")
+    private String deletionCode;
+
     @NotBlank
     @Column(name = "DeletionDate")
     private LocalDateTime deletionDate;
@@ -144,7 +144,6 @@ public class Character
                 ", characterName='" + characterName + '\'' +
                 ", level=" + level +
                 ", className='" + className + '\'' +
-                ", race='" + race + '\'' +
                 ", gender=" + gender +
                 ", sd=" + sd +
                 ", maxSD=" + maxSD +
@@ -162,6 +161,7 @@ public class Character
                 ", remainSkillPoints=" + remainSkillPoints +
                 ", remainResets=" + remainResets +
                 ", inDeletion=" + inDeletion +
+                ", deletionCode='" + deletionCode + '\'' +
                 ", deletionDate=" + deletionDate +
                 ", createDate=" + createDate +
                 ", modifiedDate=" + modifiedDate +
