@@ -1,10 +1,14 @@
 package com.valiantgaming.databaseserver;
 
-import com.valiantgaming.databaseserver.config.DatabaseServerConfig;
+import com.valiantgaming.databaseserver.config.ConfigManager;
 import com.valiantgaming.databaseserver.database.DatabaseManager;
+import com.valiantgaming.databaseserver.server.NioServer;
+import lombok.SneakyThrows;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@Log4j2
 @SpringBootApplication
 public class DatabaseServerApplication
 {
@@ -15,19 +19,27 @@ public class DatabaseServerApplication
 
     public static class DatabaseServer
     {
+        @SneakyThrows
         public DatabaseServer()
         {
             /*
-                1. Post Spring Database Tasks
+                1. DatbaseServer - Post Spring
+                    >> Config Manager
+                        a. Database Manager Config
+                        b. Database Server Config
+                        c. Account Config
+                        d. Character Config
                     >> Database Manager
                         a. Encryption Keys
-                        b. Incoming Whitelisted IPs
+                        b. Executor Service (Tasks)
+                            1. Server Info (IpRules)
+                            2. Character Deletion
+                            3. Account Deletion
+                    >> Nio-Server
              */
-            DatabaseServerConfig.init();
+            ConfigManager.getInstance();
             DatabaseManager.getInstance();
-
-//            NioServer nioServer = new NioServer();
-//            nioServer.init();
+            NioServer.getInstance();
         }
     }
 }

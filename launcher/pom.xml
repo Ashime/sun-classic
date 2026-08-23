@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.valiant-gaming</groupId>
+        <artifactId>sun-classic</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>launcher</artifactId>
+
+    <properties>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <javafx.version>25</javafx.version>
+    </properties>
+
+    <dependencies>
+        <!-- ================ COMMONS ================ -->
+        <dependency>
+            <groupId>com.valiant-gaming</groupId>
+            <artifactId>commons</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- ================ JAVAFX ================ -->
+        <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-controls -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>win</classifier>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-fxml -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>win</classifier>
+        </dependency>
+
+        <!-- ================ IKONLI ================ -->
+        <!-- Icon fonts (Discord/Facebook/gear/close/etc.) for the launcher UI -->
+        <!-- https://mvnrepository.com/artifact/org.kordamp.ikonli/ikonli-javafx -->
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-javafx</artifactId>
+            <version>12.4.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.kordamp.ikonli/ikonli-fontawesome5-pack -->
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-fontawesome5-pack</artifactId>
+            <version>12.4.0</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.valiantgaming.launcher.Main</mainClass>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                    <!-- Quiets the JVM's "restricted method" warnings JavaFX's native
+                         (glass/graphics) libraries trigger on startup - see also the matching
+                         Enable-Native-Access manifest entry (packaged jar) and the javafx-maven-
+                         plugin <options> below (mvnw javafx:run). -->
+                    <jvmArguments>--enable-native-access=ALL-UNNAMED</jvmArguments>
+                    <!-- Same reason as the javafx-maven-plugin's workingDirectory below: this
+                         plugin forks from the module directory by default, so without this
+                         LauncherConfig can't find Config/Launcher/Launcher.ini. -->
+                    <workingDirectory>${project.parent.basedir}</workingDirectory>
+                </configuration>
+            </plugin>
+
+            <!-- Adds the same native-access grant as the spring-boot-maven-plugin's
+                 jvmArguments above, but baked into the manifest so it also applies when the
+                 packaged jar is launched directly (java -jar launcher.jar), without needing
+                 the JVM flag on the command line. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Enable-Native-Access>ALL-UNNAMED</Enable-Native-Access>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+
+            <!-- Dev-run goal: mvnw -pl launcher javafx:run -->
+            <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-maven-plugin -->
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>com.valiantgaming.launcher.Main</mainClass>
+                    <!-- Unlike spring-boot:run, this plugin always forks from the module
+                         directory, so it must be pointed back at the reactor root to find
+                         Config/Launcher/Launcher.ini (see Config/<ServerName>/ convention). -->
+                    <workingDirectory>${project.parent.basedir}</workingDirectory>
+                    <options>
+                        <option>--enable-native-access=ALL-UNNAMED,javafx.graphics</option>
+                    </options>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

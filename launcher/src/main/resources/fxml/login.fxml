@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- UI only: no auth-server login call wired up yet, and "Forgot credentials?" doesn't go
+     anywhere - there's no account-recovery flow implemented. -->
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<StackPane fx:id="loginRoot" styleClass="root-pane" xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml" fx:controller="com.valiantgaming.launcher.controller.LoginController">
+
+    <VBox styleClass="reg-panel" prefWidth="420" maxWidth="420">
+
+        <HBox fx:id="loginTopBar" styleClass="reg-top-bar" alignment="CENTER_RIGHT">
+            <Button styleClass="icon-button, close-button" onAction="#onClose">
+                <graphic><FontIcon iconLiteral="fas-times" styleClass="icon-glyph"/></graphic>
+            </Button>
+        </HBox>
+
+        <VBox styleClass="reg-body" spacing="16">
+            <Label text="Welcome Back" styleClass="reg-title"/>
+            <Label text="Sign in to continue to SUN Classic." styleClass="reg-subtitle" wrapText="true"/>
+
+            <VBox styleClass="field-group" spacing="6">
+                <Label text="Username" styleClass="field-label"/>
+                <TextField promptText="Enter username" styleClass="text-input"/>
+            </VBox>
+
+            <VBox styleClass="field-group" spacing="6">
+                <Label text="Password" styleClass="field-label"/>
+                <PasswordField promptText="Enter password" styleClass="text-input"/>
+            </VBox>
+
+            <Region prefHeight="2"/>
+
+            <HBox alignment="CENTER_RIGHT">
+                <Hyperlink text="Forgot credentials?" styleClass="forgot-link" onAction="#onForgotCredentials"/>
+            </HBox>
+
+            <Region prefHeight="4"/>
+
+            <Button text="LOGIN" styleClass="btn-primary" maxWidth="Infinity" onAction="#onSubmit"/>
+            <Button text="CANCEL" styleClass="btn-outline" maxWidth="Infinity" onAction="#onClose"/>
+        </VBox>
+    </VBox>
+</StackPane>

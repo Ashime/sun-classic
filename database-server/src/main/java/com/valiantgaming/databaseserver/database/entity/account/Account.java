@@ -106,6 +106,48 @@ import java.time.LocalDateTime;
     ),
     @NamedStoredProcedureQuery
     (
+        name = "DeactivateAccount",
+        procedureName = "DeactivateAccount",
+        resultClasses = String.class,
+        parameters =
+        {
+            @StoredProcedureParameter
+            (
+                name = "username",
+                type = String.class,
+                mode = ParameterMode.IN
+            ),
+            @StoredProcedureParameter
+            (
+                name = "waitTime",
+                type = int.class,
+                mode = ParameterMode.IN
+            )
+        }
+    ),
+    @NamedStoredProcedureQuery
+    (
+        name = "DeleteAccount",
+        procedureName = "DeleteAccount",
+        resultClasses = String.class,
+        parameters =
+        {
+            @StoredProcedureParameter
+            (
+                name = "username",
+                type = String.class,
+                mode = ParameterMode.IN
+            )
+        }
+    ),
+    @NamedStoredProcedureQuery
+    (
+        name = "GetDeactivatedAccounts",
+        procedureName = "GetDeactivatedAccounts",
+        resultClasses = Account.class
+    ),
+    @NamedStoredProcedureQuery
+    (
         name = "UpdateAllPasswords",
         procedureName = "UpdateAllPasswords",
         resultClasses = String.class
@@ -137,15 +179,15 @@ public class Account
     private int accountID;
 
     @Column(name = "AccountStorageID")
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    //@GeneratedValue(strategy = GenerationType.AUTO)
     private int accountStorageID;
 
     @Column(name = "CharacterSlotID")
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    //@GeneratedValue(strategy = GenerationType.AUTO)
     private int characterSlotID;
 
     @Column(name = "ProfileID")
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    //@GeneratedValue(strategy = GenerationType.AUTO)
     private int profileID;
 
     @NotBlank

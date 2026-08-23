@@ -4,7 +4,11 @@
         LINK: https://logging.apache.org/log4j/2.x/manual/appenders.html
 
     >> CronTriggeringPolicy (CronExpression) <<
+        > DOCUMENTATION:
         LINK: https://logging.apache.org/log4j/2.x/javadoc/log4j-core/org/apache/logging/log4j/core/util/CronExpression.html
+       > GENERATOR:
+       LINK: http://www.cronmaker.com/
+
 -->
 <Configuration strict = "false">
     <Properties>
@@ -21,11 +25,11 @@
         </Console>
 
         <RollingFile name = "LogFile" fileName = "${logPath}/${date:yyyy-MM}/${appName} ${date:MM-dd}.log"
-                     filePattern = "${logPath}/Archive/${date:yyyy}/${appName} %d{yyyy-MM-dd}.log.zip">
+                     filePattern = "${logPath}/Archive/${date:yyyy}/${date:MM}/${appName} %d{yyyy-MM-dd}.zip">
             <PatternLayout pattern = "${logPattern}"/>
-            <CronTriggeringPolicy schedule="0 1 * * * ?"/>
+            <CronTriggeringPolicy schedule="0 0 0 ? * SAT *"/>
             <DefaultRolloverStrategy compressionLevel = "9">
-                <Delete basePath = "${logPath}/" maxDepth = "1" testMode = "true">
+                <Delete basePath = "${logPath}/${date:yyyy-MM}/" maxDepth = "1" testMode = "true">
                     <IfFileName glob = "*/${appName} *.log.zip"/>
                     <IfLastModified age = "P1D"/>
                 </Delete>
@@ -33,6 +37,7 @@
         </RollingFile>
     </Appenders>
     <Loggers>
+        <Logger name="org.hibernate.SQL" level="DEBUG"/>
         <Root level = "INFO">
             <AppenderRef ref = "LogFile"/>
             <AppenderRef ref = "Console"/>

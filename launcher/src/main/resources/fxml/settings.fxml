@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- UI only: mirrors the options listed under the reference concept's Graphics tab (see
+     Concepts/Settings.png). Selector/toggle values shown are static placeholders - nothing
+     here is wired to real graphics config yet. The reference also has Game/Sound/Shortcut key
+     tabs, but no option list was available for them, so only Graphics exists. -->
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.*?>
+<StackPane fx:id="settingsRoot" styleClass="root-pane" xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml" fx:controller="com.valiantgaming.launcher.controller.SettingsController">
+
+    <VBox styleClass="reg-panel, settings-panel" prefWidth="600" maxWidth="600" prefHeight="620" maxHeight="620">
+
+        <HBox fx:id="settingsTopBar" styleClass="reg-top-bar, settings-top-bar" alignment="CENTER_LEFT">
+            <Label text="Settings" styleClass="settings-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button styleClass="icon-button, close-button" onAction="#onClose">
+                <graphic><FontIcon iconLiteral="fas-times" styleClass="icon-glyph"/></graphic>
+            </Button>
+        </HBox>
+
+        <HBox styleClass="settings-tab-bar">
+            <Button text="Graphics" styleClass="settings-tab, settings-tab-selected"/>
+        </HBox>
+
+        <ScrollPane styleClass="settings-scroll" fitToWidth="true" VBox.vgrow="ALWAYS">
+            <VBox styleClass="settings-body" spacing="2">
+
+                <HBox styleClass="section-header" alignment="CENTER_LEFT" spacing="8">
+                    <FontIcon iconLiteral="fas-minus" styleClass="section-icon"/>
+                    <Label text="Graphics settings" styleClass="section-title"/>
+                </HBox>
+
+                <HBox styleClass="option-row" alignment="CENTER_LEFT">
+                    <Label text="Resolution" styleClass="option-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <HBox styleClass="option-selector" alignment="CENTER">
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-left" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                        <Label text="Full (Max Resolution)" styleClass="selector-value" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-right" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                    </HBox>
+                </HBox>
+
+                <HBox styleClass="option-row" alignment="CENTER_LEFT">
+                    <Label text="Resolution" styleClass="option-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <HBox styleClass="option-selector" alignment="CENTER">
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-left" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                        <Label text="2560 x 1440 x 24" styleClass="selector-value" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-right" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                    </HBox>
+                </HBox>
+
+                <HBox styleClass="option-row" alignment="CENTER_LEFT">
+                    <Label text="Texture quality" styleClass="option-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <HBox styleClass="option-selector" alignment="CENTER">
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-left" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                        <Label text="High" styleClass="selector-value" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-right" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                    </HBox>
+                </HBox>
+
+                <HBox styleClass="option-row" alignment="CENTER_LEFT">
+                    <Label text="Effect quality" styleClass="option-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <HBox styleClass="option-selector" alignment="CENTER">
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-left" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                        <Label text="High" styleClass="selector-value" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-right" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                    </HBox>
+                </HBox>
+
+                <HBox styleClass="option-row" alignment="CENTER_LEFT">
+                    <Label text="Level of Detail (LOD)" styleClass="option-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <HBox styleClass="option-selector" alignment="CENTER">
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-left" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                        <Label text="High" styleClass="selector-value" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-right" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                    </HBox>
+                </HBox>
+
+                <HBox styleClass="section-header" alignment="CENTER_LEFT" spacing="8">
+                    <FontIcon iconLiteral="fas-minus" styleClass="section-icon"/>
+                    <Label text="Advanced Settings" styleClass="section-title"/>
+                </HBox>
+
+                <HBox styleClass="option-row" alignment="CENTER_LEFT">
+                    <Label text="Shadow" styleClass="option-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <HBox styleClass="option-selector" alignment="CENTER">
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-left" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                        <Label text="ON" styleClass="selector-value" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-right" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                    </HBox>
+                </HBox>
+
+                <HBox styleClass="option-row" alignment="CENTER_LEFT">
+                    <Label text="Glow" styleClass="option-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <HBox styleClass="option-selector" alignment="CENTER">
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-left" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                        <Label text="OFF" styleClass="selector-value" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-right" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                    </HBox>
+                </HBox>
+
+                <HBox styleClass="option-row" alignment="CENTER_LEFT">
+                    <Label text="Fog" styleClass="option-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <HBox styleClass="option-selector" alignment="CENTER">
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-left" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                        <Label text="ON" styleClass="selector-value" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-right" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                    </HBox>
+                </HBox>
+
+                <HBox styleClass="option-row" alignment="CENTER_LEFT">
+                    <Label text="Tile effect" styleClass="option-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <HBox styleClass="option-selector" alignment="CENTER">
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-left" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                        <Label text="ON" styleClass="selector-value" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-right" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                    </HBox>
+                </HBox>
+
+                <HBox styleClass="option-row" alignment="CENTER_LEFT">
+                    <Label text="Background" styleClass="option-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <HBox styleClass="option-selector" alignment="CENTER">
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-left" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                        <Label text="ON" styleClass="selector-value" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-right" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                    </HBox>
+                </HBox>
+
+                <HBox styleClass="option-row" alignment="CENTER_LEFT">
+                    <Label text="Post Effect" styleClass="option-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <HBox styleClass="option-selector" alignment="CENTER">
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-left" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                        <Label text="OFF" styleClass="selector-value" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-right" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                    </HBox>
+                </HBox>
+
+                <HBox styleClass="option-row" alignment="CENTER_LEFT">
+                    <Label text="Object Display Range (Curling Range)" styleClass="option-label" wrapText="true"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <StackPane styleClass="option-selector">
+                        <Region styleClass="range-slider-fill"/>
+                        <Label text="100%" styleClass="selector-value"/>
+                    </StackPane>
+                </HBox>
+
+                <HBox styleClass="option-row" alignment="CENTER_LEFT">
+                    <Label text="Interface Size" styleClass="option-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <HBox styleClass="option-selector" alignment="CENTER">
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-left" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                        <Label text="Default" styleClass="selector-value" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-right" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                    </HBox>
+                </HBox>
+
+                <HBox styleClass="option-row" alignment="CENTER_LEFT">
+                    <Label text="Optimize Game Configurations" styleClass="option-label"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <HBox styleClass="option-selector" alignment="CENTER">
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-left" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                        <Label text="ON" styleClass="selector-value" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Button styleClass="selector-arrow">
+                            <graphic><FontIcon iconLiteral="fas-caret-right" styleClass="icon-glyph"/></graphic>
+                        </Button>
+                    </HBox>
+                </HBox>
+
+            </VBox>
+        </ScrollPane>
+
+        <HBox styleClass="settings-action-row" spacing="12">
+            <Button text="CONFIRM" styleClass="btn-primary" onAction="#onConfirm" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <Button text="CANCEL" styleClass="btn-outline" onAction="#onCancel" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+        </HBox>
+    </VBox>
+</StackPane>
