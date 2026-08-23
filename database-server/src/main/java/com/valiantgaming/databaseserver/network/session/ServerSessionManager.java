@@ -38,19 +38,23 @@ public class ServerSessionManager extends SessionManager
     @Override
     public ServerSession getSession(Object object)
     {
+        ServerSession session = null;
         InetSocketAddress ipAddress = (InetSocketAddress) object;
-        String[] address = ipAddress.toString().split(":");
+        String[] address = ipAddress.toString().replace("/", "").split(":");
 
         for(ServerSession s : serverSessions)
         {
-            if(((ServerInfo)s.getServerInfo()).getPublicIP().equals(address[0]) || ((ServerInfo)s.getServerInfo()).getIpv4().equals(address[0])
-                || ((ServerInfo)s.getServerInfo()).getLocalIP().equals(address[0]))
+            ServerInfo serverInfo = (ServerInfo) s.getServerInfo();
+
+            if((serverInfo.isPublicEnabled() && serverInfo.getPublicIP().equals(address[0])) ||
+                    (serverInfo.isIpv4Enabled() && serverInfo.getIpv4().equals(address[0])) ||
+                    (serverInfo.isLocalEnabled() && serverInfo.getLocalIP().equals(address[0])))
             {
-                return s;
+                session = s;
             }
         }
 
-        return null;
+        return session;
     }
 
     @Override
@@ -65,6 +69,19 @@ public class ServerSessionManager extends SessionManager
                 {
                     serverSessions.add(session);
                 }
+            }
+        }
+    }
+
+    @Override
+    public void removeSession(Object object)
+    {
+        ServerSession session = (ServerSession) object;
+        for(ServerSession s : serverSessions)
+        {
+            if(s.getServerInfo().equals(session.getServerInfo()))
+            {
+                serverSessions.remove(s);
             }
         }
     }

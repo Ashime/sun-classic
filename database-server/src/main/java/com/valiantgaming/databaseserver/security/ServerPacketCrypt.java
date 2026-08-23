@@ -16,14 +16,4 @@ public class ServerPacketCrypt extends PacketCrypt
     {
         return new byte[]{0x00};
     }
-
-    public byte[] decryptMessage(@NotNull byte[] aesKey, @NotNull byte[] aesIv, @NotNull byte[] message)
-    {
-        return new byte[]{0x00};
-    }
-
-    public byte[] encryptMessage(@NotNull byte[] aesKey, @NotNull byte[] aesIv, @NotNull byte[] message)
-    {
-        return new byte[] {0x00};
-    }
 }

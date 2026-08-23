@@ -1,6 +1,6 @@
-package com.valiantgaming.authserver.network.session;
+package com.valiantgaming.authserver.network.session.server;
 
-import com.valiantgaming.authserver.database.entity.ServerInfo;
+import com.valiantgaming.authserver.database.entity.server.ServerInfo;
 import com.valiantgaming.authserver.security.crypt.AES;
 import com.valiantgaming.authserver.security.crypt.RSA;
 import com.valiantgaming.commons.network.session.SessionManager;
@@ -35,7 +35,7 @@ public class ServerSessionManager extends SessionManager
     public ServerSession getSession(Object object)
     {
         InetSocketAddress ipAddress = (InetSocketAddress) object;
-        String[] address = ipAddress.toString().split(":");
+        String[] address = ipAddress.toString().replace("/", "").split(":");
 
         for(ServerSession s : serverSessions)
         {
@@ -63,6 +63,25 @@ public class ServerSessionManager extends SessionManager
                 }
             }
         }
+    }
+
+    @Override
+    public void removeSession(Object object)
+    {
+        ServerSession session = (ServerSession) object;
+        for(ServerSession s : serverSessions)
+        {
+            if(s.getServerInfo().equals(session.getServerInfo()))
+            {
+                serverSessions.remove(s);
+            }
+        }
+    }
+
+    @Override
+    public void clearSessions()
+    {
+        serverSessions.clear();
     }
 
     public static ServerSessionManager getInstance()

@@ -18,6 +18,56 @@ public interface Protocol
      */
 
     /*
+        WEBZEN WEB PLUGIN PASSES COOKIE DATA TO LAUNCHER PRIOR TO PACKET TRANSFER.
+        Inside the client Log files... see "C:\Program Files (x86)\WEBZEN\Soul of the Ultimate Nation Classic\Log\USERLOGFILE_2026_08_21.txt"
+            Assumed User ID: 42126697
+            Username: AioHaruka
+            Assumed Encrypted Password: f3 82 86 9f cd 69 b9 65 dc bc 08 cf 02 20 4a 87 c1 cc
+            Unknown: 2|1|1|2|2
+            >> NOTE: If you add "-User:AioHaruka -Password:2408v5vv49or82027e4kod6920de9f74d7e3" at the end of the
+            target value in the shortcut for sungame.exe, then the client will launch. The only issue that comes up is
+            the client not having an authorization token that comes from the Webzen Web Starter.
+
+        Web - Check for update client version through packet.
+            >> EXAMPLE: GET /classic/sun/service/update.uvf HTTP/1.1\r\n
+
+        Web - Check for update launcher version through packet.
+            >> EXAMPLE: GET /launcher HTTP/1.1\r\n
+
+        LAUNCHER:
+            L2A_askUnknown1: 0xFE - NO DATA
+            A2L_ansReady (Tea Key) - Packet encryption
+            A2L_ansVerifyVersion = 0xFF
+                >> Example:
+                    Packet Size: 0e 00
+                    Category: 33
+                    Protocol: ff
+                    Data: 01 00 09 02 02 04 00 03 00 06 00 00
+                        >> Launcher Version: 01 00 09 02
+                        >> Client Version: 02 04 00 03
+                        >> Unknown: 00 06 00 00
+                            NOTE: This might be the client protocol.
+
+         FROM HERE THE CLIENT DOES ALL NORMAL STEPS!
+     */
+
+    /*
+        ====================================
+              LAUNCHER <-> AUTHSERVER
+        ====================================
+        Handshake the Launcher runs against AuthServer (Category.AUTH - see the captured
+        example under A2L_ansVerifyVersion above) before handing off to the game client,
+        which then does its own separate connection/login below (SERVER TO CLIENT). Order,
+        per that capture: L2A_askUnknown1 -> A2L_ansReady (delivers the TEA key that turns on
+        packet encryption) -> A2L_ansVerifyVersion.
+     */
+    byte L2A_askUnknown1      = (byte) 0xFE;
+    // TODO: opcode unconfirmed - no example of this packet has been captured yet, this is a
+    // placeholder so the launcher-side shell has something to compile/dispatch against.
+    byte A2L_ansReady         = (byte) 0xFD;
+    byte A2L_ansVerifyVersion = (byte) 0xFF;
+
+    /*
         ====================================
                   SERVER TO CLIENT
         ====================================
@@ -28,7 +78,7 @@ public interface Protocol
     byte A2U_ansVerify      = 0x02;
     byte U2A_askAuthUser    = 0x03;
     /*
-        C2S_askAuthUser PACKET HAS CHANGED!
+        U2S_askAuthUser PACKET HAS CHANGED!
 
         >> Packet Size: 5d 00 (LE. Otherwise, 00 5d)
         >> Category: 33
@@ -36,7 +86,7 @@ public interface Protocol
         >> UID Size?: 08
         >> Filler: 00 00 00
         >> UID?: 69 cd 82 02 02 a1 0f 00
-                NOTE: Provided UID in decimal: 42126697. Hex: 02 82 CD 69.
+                NOTE: UID came from the cookie to launcher. Provided UID in decimal: 42126697. Hex: 02 82 CD 69.
                 So the first 4 bytes only match in LE.
         >> Filler: 00
         >> Username: 41 69 6f 48 61 72 75 6b 61 00
@@ -59,49 +109,11 @@ public interface Protocol
     byte A2U_ansSrvSelect   = 0x1A;
 
     /*
-    WEBZEN WEB PLUGIN PASSES COOKIE DATA TO LAUNCHER PRIOR TO PACKET TRANSFER.
-    Inside the client Log files... see [Client]\Log
-        ID: 42126697
-        Username: AioHaruka
-        Encrypted Password: f3 82 86 9f cd 69 b9 65 dc bc 08 cf 02 20 4a 87 c1 cc
-        Unknown: 2|1|1|2|2
-        >> NOTE: If you fed this data to sungame.exe then this "f3 82 86 9f cd 69 b9 65 dc bc 08 cf 02 20 4a 87 c1 cc"
-        will show up in the verify login packet.
-
-    Web-check for update client version through packet.
-        >> EXAMPLE: GET /classic/sun/service/update.uvf HTTP/1.1\r\n
-
-    Web-check for update launcher version through packet.
-        >> EXAMPLE: GET /launcher HTTP/1.1\r\n
-
-    LAUNCHER:
-        C2S_askUnknown1: 0xFE - NO DATA
-        S2C_ansReady (Tea Key)
-        S2C_ansVerifyVersion = 0xFF
-            >> Example:
-                Packet Size: 0e 00
-                Category: 33
-                Protocol: ff
-                Data: 01 00 09 02 02 04 00 03 00 06 00 00
-                    >> Launcher Version: 01 00 09 02
-                    >> Client Version: 02 04 00 03
-                    >> Unknown: 00 06 00 00
-
-     FROM HERE THE CLIENT DOES ALL NORMAL STEPS!
-     */
-
-    /*
         ====================================
                   SERVER TO SERVER
         ====================================
      */
     // ---------- Common Packets ----------
-    byte S2S_askAesFileKey = 0x00;
-    byte S2S_ansAesFileKey = 0x01;
-    byte S2S_askRsaKey = 0x02; // ABLE TO DECRYPT FILE AND OBTAIN SHA SYSTEM KEY.
-    byte S2S_ansRsaKey = 0x03; // MAC GENERATED AND ATTACHED TO PACKET.
-    byte S2S_askAesKey = 0x04;
-    byte S2S_ansAesKey = 0x05; // PACKET ENCRYPTION ENABLED!
-    byte S2S_askServerInfo = 0x06;
-    byte S2S_ansServerInfo = 0x07;
+    byte S2S_askServerInfo = 0x01;
+    byte S2S_ansServerInfo = 0x02;
 }

@@ -1,8 +1,8 @@
 package com.valiantgaming.authserver.network.firewall.server;
 
 import com.valiantgaming.authserver.config.AuthServerConfig;
-import com.valiantgaming.authserver.database.entity.ServerInfo;
-import com.valiantgaming.authserver.network.session.ServerSessionManager;
+import com.valiantgaming.authserver.database.entity.server.ServerInfo;
+import com.valiantgaming.authserver.network.session.server.ServerSessionManager;
 import io.netty.handler.ipfilter.IpFilterRule;
 import io.netty.handler.ipfilter.IpFilterRuleType;
 import lombok.Setter;

@@ -10,39 +10,40 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 
-import java.net.InetSocketAddress;
-
 @Log4j2
-public class PacketDecoder extends ChannelInboundHandlerAdapter implements Category
+public class PacketDecoder extends ChannelInboundHandlerAdapter
 {
     private static final ServerPacketCrypt serverPacketCrypt = new ServerPacketCrypt();
 
-    private static void decodePacket(ChannelHandlerContext ctx, byte[] packet)
+    @Override
+    @SneakyThrows
+    public void channelRead(ChannelHandlerContext ctx, Object msg)
     {
-        ServerSession session = ServerSessionManager.getInstance().getSession((InetSocketAddress) ctx.channel().localAddress());
+        ServerSession session = ServerSessionManager.getInstance().getSession(ctx.channel().remoteAddress());
 
         int size;
         byte[] header;
+        byte[] packet = (byte[]) msg;
 
         if(session.isPacketCryptEnabled())
         {
             packet = serverPacketCrypt.decryptPacket(session.getRsaPrivateKey().getEncoded(), packet);
 
-            if(session.isMessageCryptEnabled())
-            {
-                packet = serverPacketCrypt.decryptMessage(session.getAesSecretKey().getEncoded(), session.getAesIv(), packet);
-            }
+//            if(session.isMessageCryptEnabled())
+//            {
+//                packet = serverPacketCrypt.decryptMessage(session.getAesSecretKey().getEncoded(), session.getAesIv(), packet);
+//            }
         }
 
         // Flip the size bytes around.
-        packet = Utility.flip(packet, 0, 1);
+        Utility.flip(packet, 0, 1);
         // Split the size header off.
         header = Utility.split(packet, 0, 2);
         // Split message from size header
         packet = Utility.split(packet, 2, packet.length);
 
-        // Convert size from byte array into int.
-        size = Utility.byteArrayToInt(header);
+        // Convert size from byte array into short (2 byte int).
+        size = Utility.byteArrayToShort(header);
 
         if(packet.length == size && packet[0] == Category.DATABASE)
         {
@@ -52,16 +53,9 @@ public class PacketDecoder extends ChannelInboundHandlerAdapter implements Categ
         }
         else
         {
-            log.warn("Packet dropped due to incorrect header! Category: " + packet[0] + "/tSize: " + size + "/" + packet.length + " (Calculated/Actual)");
+            log.warn("Packet dropped due to incorrect header! Category: " + packet[0] + "\tSize: " + size + "/" + packet.length + " (Calculated/Actual)");
             // Drops the packet.
             ctx.fireChannelReadComplete();
         }
-    }
-
-    @Override
-    @SneakyThrows
-    public void channelRead(ChannelHandlerContext ctx, Object msg)
-    {
-        decodePacket(ctx, (byte[]) msg);
     }
 }

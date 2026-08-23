@@ -11,8 +11,6 @@ import io.netty.channel.ChannelPromise;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 
-import java.net.InetSocketAddress;
-
 @Log4j2
 public class PacketEncoder extends ChannelOutboundHandlerAdapter implements Category
 {
@@ -20,27 +18,28 @@ public class PacketEncoder extends ChannelOutboundHandlerAdapter implements Cate
 
     private static void encodePacket(ChannelHandlerContext ctx, byte[] message)
     {
-        ServerSession session = ServerSessionManager.getInstance().getSession((InetSocketAddress) ctx.channel().localAddress());
+        ServerSession session = ServerSessionManager.getInstance().getSession(ctx.channel().remoteAddress());
 
         if(message[0] == Category.DATABASE)
         {
-            byte[] header = Utility.intToByteArray(message.length);
-            header = Utility.flip(header, 0, 1);
+            byte[] header = Utility.intToByteArray((short) message.length);
+            Utility.flip(header, 0, 1);
 
             byte[] packet = new byte[header.length + message.length];
             System.arraycopy(header, 0, packet, 0, header.length);
-            System.arraycopy(message, 0, packet, header.length, packet.length);
+            System.arraycopy(message, 0, packet, 2, message.length);
 
-            if(session.isMessageCryptEnabled())
-            {
-                packet = serverPacketCrypt.encryptMessage(session.getAesSecretKey().getEncoded(), session.getAesIv(), packet);
-            }
+//            if(session.isMessageCryptEnabled())
+//            {
+//                packet = serverPacketCrypt.encryptMessage(session.getAesSecretKey().getEncoded(), session.getAesIv(), packet);
+//            }
 
             if(session.isPacketCryptEnabled())
             {
                 packet = serverPacketCrypt.encryptPacket(session.getRsaPrivateKey().getEncoded(), packet);
             }
 
+            log.info(Utility.byteArrayToHexString(packet));
             ctx.writeAndFlush(packet);
         }
         else

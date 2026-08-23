@@ -1,5 +1,6 @@
 package com.valiantgaming.commons.security.crypt;
 
+import lombok.Getter;
 import lombok.SneakyThrows;
 
 import javax.crypto.Cipher;
@@ -10,6 +11,8 @@ import java.security.PrivateKey;
 public class RSA
 {
     private static Cipher cipher;
+
+    @Getter
     private static final int keySize = 2048;
 
     @SneakyThrows

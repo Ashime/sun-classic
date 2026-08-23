@@ -28,7 +28,17 @@ public class AuthServerConfig
 
     // [SECURITY]
     @Getter
+    private static int hmacTimestampOffset;
+    @Getter
     private static boolean trustedDevices;
+
+    // [TLS]
+    @Getter
+    private static String tlsCertPath;
+    @Getter
+    private static String tlsKeyPath;
+    @Getter
+    private static String tlsCaPath;
 
     // [DATABASE_SERVER]
     @Getter
@@ -75,7 +85,13 @@ public class AuthServerConfig
         uniqueIpFilter = ini.get("NETWORK", "UNIQUE_IP_FILTER", boolean.class);
         disconnect = ini.get("NETWORK", "DISCONNECT", int.class);
 
+        // [TLS]
+        tlsCertPath = ini.get("TLS", "CERT_PATH", String.class);
+        tlsKeyPath = ini.get("TLS", "KEY_PATH", String.class);
+        tlsCaPath = ini.get("TLS", "CA_PATH", String.class);
+
         // [SECURITY]
+        hmacTimestampOffset = ini.get("SECURITY", "HMAC_TIMESTAMP_OFFSET", int.class);
         trustedDevices = ini.get("SECURITY", "TRUSTED_DEVICES", boolean.class);
 
         // [DATABASE_SERVER]

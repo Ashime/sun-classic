@@ -18,7 +18,9 @@ import java.security.SecureRandom;
 @Log4j2
 public class AES
 {
+
     private static final int keySize = 256; // 32 bytes
+    @Getter
     private static final int ivLength = 12;
     private static final int tagLength = 128; // 16 bytes
 
@@ -56,6 +58,12 @@ public class AES
     }
 
     @SneakyThrows
+    public byte[] encrypt()
+    {
+        return new byte[]{0x00};
+    }
+
+    @SneakyThrows
     public void encryptFile(String key, String iv, byte[] message)
     {
         secretKey = new SecretKeySpec(Utility.hexStringToByteArray(key), "AES");
@@ -81,5 +89,19 @@ public class AES
         cipher.init(Cipher.DECRYPT_MODE, secretKey, gcmParameterSpec);
 
         return Utility.byteArrayToHexString(cipher.doFinal(encMessage));
+    }
+
+    public static int getKeySize()
+    {
+        return keySize / 8;
+    }
+
+    private static final class InstanceHolder {
+        private static final AES instance = new AES();
+    }
+
+    public static AES getInstance()
+    {
+        return InstanceHolder.instance;
     }
 }

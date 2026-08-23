@@ -1,7 +1,7 @@
 package com.valiantgaming.authserver.server.coder.server;
 
-import com.valiantgaming.authserver.network.session.ServerSession;
-import com.valiantgaming.authserver.network.session.ServerSessionManager;
+import com.valiantgaming.authserver.network.session.server.ServerSession;
+import com.valiantgaming.authserver.network.session.server.ServerSessionManager;
 import com.valiantgaming.authserver.security.PacketCrypt;
 import com.valiantgaming.commons.network.packet.Category;
 import com.valiantgaming.commons.utility.Utility;
@@ -11,25 +11,24 @@ import io.netty.channel.ChannelPromise;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 
-import java.net.InetSocketAddress;
-
 @Log4j2
-public class ServerPacketEncoder extends ChannelOutboundHandlerAdapter
+public class ServerPacketEncoder extends ChannelOutboundHandlerAdapter implements Category
 {
     private static void encodePacket(ChannelHandlerContext ctx, byte[] message)
     {
-        ServerSession session = ServerSessionManager.getInstance().getSession((InetSocketAddress) ctx.channel().localAddress());
+        ServerSession session = ServerSessionManager.getInstance().getSession(ctx.channel().remoteAddress());
 
         // TODO: Update to include other server Category packets.
         if(message[0] == Category.DATABASE)
         {
-            byte[] header = Utility.intToByteArray(message.length);
-            header = Utility.flip(header, 0, 1);
+            byte[] header = Utility.intToByteArray((short) message.length);
+            Utility.flip(header, 0, 1);
 
             byte[] packet = new byte[header.length + message.length];
             System.arraycopy(header, 0, packet, 0, header.length);
-            System.arraycopy(message, 0, packet, header.length, packet.length);
+            System.arraycopy(message, 0, packet, header.length, message.length);
 
+            assert session != null;
             if(session.isMessageCryptEnabled())
             {
                 packet = PacketCrypt.encryptMessage(session.getAesSecretKey().getEncoded(), session.getAesIv(), packet);
@@ -40,6 +39,7 @@ public class ServerPacketEncoder extends ChannelOutboundHandlerAdapter
                 packet = PacketCrypt.encryptPacket(session.getRsaPublicKey().getEncoded(), packet);
             }
 
+            log.info(Utility.byteArrayToHexString(packet));
             ctx.writeAndFlush(packet);
         }
         else

@@ -179,15 +179,15 @@ public class Account
     private int accountID;
 
     @Column(name = "AccountStorageID")
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    //@GeneratedValue(strategy = GenerationType.AUTO)
     private int accountStorageID;
 
     @Column(name = "CharacterSlotID")
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    //@GeneratedValue(strategy = GenerationType.AUTO)
     private int characterSlotID;
 
     @Column(name = "ProfileID")
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    //@GeneratedValue(strategy = GenerationType.AUTO)
     private int profileID;
 
     @NotBlank

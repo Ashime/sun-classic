@@ -37,6 +37,7 @@
         </RollingFile>
     </Appenders>
     <Loggers>
+        <Logger name="org.hibernate.SQL" level="DEBUG"/>
         <Root level = "INFO">
             <AppenderRef ref = "LogFile"/>
             <AppenderRef ref = "Console"/>

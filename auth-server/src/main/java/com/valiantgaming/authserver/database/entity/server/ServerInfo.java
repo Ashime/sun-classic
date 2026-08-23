@@ -1,4 +1,4 @@
-package com.valiantgaming.authserver.database.entity;
+package com.valiantgaming.authserver.database.entity.server;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### TLS (locally generated dev CA/certs/keys - never commit) ###
+Config/tls/
+Config/*/tls/

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    The shell is drawn as a Path (not a plain rounded rect) so the top-right corner can be
+    bevelled/diagonally cut, matching the concept. Two identical outlines are needed: one
+    painted (shellOutline, the visible panel) and one used only as a clip on the "shell" VBox
+    so its content/background can't render past the bevel (a single Node can't serve both
+    roles at once). Keep both elements lists in sync if the size/radius/cut ever changes.
+    The panel itself is still 1080x540, but the window (WIDTH/HEIGHT in
+    Config/Launcher/Launcher.ini) is 80px taller than that and the panel is bottom-anchored,
+    leaving a transparent strip above it so the logo overlay (bottom of this file) has room
+    to extend past the panel's top edge, matching launcher-template.png.
+-->
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+<?import org.kordamp.ikonli.javafx.*?>
+<StackPane fx:id="rootPane" styleClass="root-pane" xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml" fx:controller="com.valiantgaming.launcher.controller.LauncherController">
+
+    <!-- Casts the panel's drop shadow. A dropshadow applied directly to shellOutline (an
+         arc-based Path built from MoveTo/LineTo/ArcTo elements) renders an opaque white
+         block in the rounded-away corner area in this JavaFX build instead of a transparent
+         cutout. A plain Region (CSS background-radius) avoids that but has no bevel, so it
+         showed through solid behind the top-right cut. SVGPath (geometry from one content
+         string, not a PathElement list) has neither problem - same outline, bevel intact,
+         corners stay transparent - so the shadow lives here, behind the crisp, unshadowed
+         shellOutline Path below. Keep this content string in sync with shellOutline/
+         LauncherController#buildShellClip() if the size/radius/cut ever changes. -->
+    <SVGPath styleClass="shell-shadow" StackPane.alignment="BOTTOM_CENTER"
+             content="M16,0 L1036,0 L1080,44 L1080,524 A16,16 0 0,1 1064,540 L16,540 A16,16 0 0,1 0,524 L0,16 A16,16 0 0,1 16,0 Z"/>
+
+    <Path styleClass="shell-outline" StackPane.alignment="BOTTOM_CENTER">
+        <elements>
+            <MoveTo x="16" y="0"/>
+            <LineTo x="1036" y="0"/>
+            <LineTo x="1080" y="44"/>
+            <LineTo x="1080" y="524"/>
+            <ArcTo x="1064" y="540" radiusX="16" radiusY="16" sweepFlag="true"/>
+            <LineTo x="16" y="540"/>
+            <ArcTo x="0" y="524" radiusX="16" radiusY="16" sweepFlag="true"/>
+            <LineTo x="0" y="16"/>
+            <ArcTo x="16" y="0" radiusX="16" radiusY="16" sweepFlag="true"/>
+            <ClosePath/>
+        </elements>
+    </Path>
+
+    <VBox fx:id="shell" styleClass="shell" maxWidth="1080" maxHeight="540" prefWidth="1080" prefHeight="540"
+          StackPane.alignment="BOTTOM_CENTER">
+        <!-- Clip (same bevelled outline as shellOutline above) is set programmatically in
+             LauncherController; see buildShellClip(). -->
+
+        <!-- Title bar: social links, drag handle, window controls -->
+        <HBox fx:id="topBar" styleClass="top-bar" alignment="CENTER_LEFT">
+            <HBox styleClass="social-icons" alignment="CENTER_LEFT" spacing="10">
+                <Button styleClass="icon-button" onAction="#onDiscord">
+                    <graphic><FontIcon iconLiteral="fab-discord" styleClass="icon-glyph"/></graphic>
+                </Button>
+                <Button styleClass="icon-button" onAction="#onWebsite">
+                    <graphic><FontIcon iconLiteral="fas-globe" styleClass="icon-glyph"/></graphic>
+                </Button>
+                <Button styleClass="icon-button" onAction="#onFacebook">
+                    <graphic><FontIcon iconLiteral="fab-facebook-f" styleClass="icon-glyph"/></graphic>
+                </Button>
+            </HBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <HBox styleClass="window-controls" alignment="CENTER_RIGHT" spacing="10">
+                <Button styleClass="icon-button" onAction="#onSettings">
+                    <graphic><FontIcon iconLiteral="fas-cog" styleClass="icon-glyph"/></graphic>
+                </Button>
+                <Button styleClass="icon-button" onAction="#onMinimize">
+                    <graphic><FontIcon iconLiteral="fas-minus" styleClass="icon-glyph"/></graphic>
+                </Button>
+                <Button styleClass="icon-button, close-button" onAction="#onClose">
+                    <graphic><FontIcon iconLiteral="fas-times" styleClass="icon-glyph"/></graphic>
+                </Button>
+            </HBox>
+        </HBox>
+
+        <!-- Reserves vertical space below the floating logo overlay (bottom of this file)
+             before content starts. Shorter than the logo itself - the logo's bottom ~80px
+             hangs over this gap without touching the preview-art panel - so shrinking this
+             pushes the preview-art panel up and taller (growing this does the opposite). -->
+        <Region styleClass="logo-spacer" minHeight="130" prefHeight="130" maxHeight="130"/>
+
+        <!-- Content -->
+        <HBox styleClass="content-row" spacing="24" VBox.vgrow="ALWAYS">
+
+            <!-- Left: preview art + progress -->
+            <VBox styleClass="media-panel" spacing="22" HBox.hgrow="ALWAYS">
+                <Region styleClass="preview-art" VBox.vgrow="ALWAYS"/>
+
+                <VBox styleClass="progress-section" spacing="10">
+                    <HBox styleClass="progress-label-row" spacing="10">
+                        <Label text="Total Progress" styleClass="progress-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="60.12%" styleClass="progress-value"/>
+                        <Label text="323Mb/s" styleClass="progress-value, progress-value-accent"/>
+                    </HBox>
+                    <ProgressBar progress="0.6012" styleClass="progress-bar-total" maxWidth="Infinity"/>
+
+                    <HBox styleClass="progress-label-row" spacing="10">
+                        <Label text="Update" styleClass="progress-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="90.2%" styleClass="progress-value"/>
+                        <Label text="300Mb of 3104 MB" styleClass="progress-value, progress-value-accent"/>
+                    </HBox>
+                    <ProgressBar progress="0.902" styleClass="progress-bar-update" maxWidth="Infinity"/>
+                </VBox>
+            </VBox>
+
+            <!-- Right: status + actions -->
+            <VBox styleClass="info-panel" spacing="8" prefWidth="380">
+
+                <!-- Outline is redrawn to match the panel's actual size at runtime; see
+                     LauncherController#wireBeveledOutline(). Same bevelled-top-right /
+                     rounded-elsewhere treatment as the window shell, just smaller. -->
+                <StackPane fx:id="eventsPanel" styleClass="events-panel" VBox.vgrow="ALWAYS" maxWidth="Infinity">
+                    <SVGPath fx:id="eventsPanelOutline" styleClass="events-panel-outline" managed="false"/>
+                    <VBox styleClass="events-panel-content">
+                        <Label text="Events" styleClass="events-panel-title"/>
+                    </VBox>
+                </StackPane>
+
+                <Region minHeight="4" prefHeight="4" maxHeight="4"/>
+
+                <!-- Plain (no corner-tick brackets) - sits just above the community divider -->
+                <HBox styleClass="bracket-content" alignment="CENTER" spacing="6">
+                    <Label text="Server Time" styleClass="bracket-title"/>
+                    <Label fx:id="serverTimeValue" text="--.--.-- --" styleClass="bracket-value, value-cyan"/>
+                </HBox>
+
+                <HBox styleClass="bracket-content" alignment="CENTER_LEFT" spacing="14">
+                    <Label text="Login Server" styleClass="bracket-title"/>
+                    <Circle fx:id="connectServerStatus" radius="6.5" styleClass="status-dot"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label text="Game Server" styleClass="bracket-title"/>
+                    <Circle fx:id="gameServerStatus" radius="6.5" styleClass="status-dot"/>
+                </HBox>
+
+                <Separator styleClass="community-divider"/>
+                <Label text="Join our community!" styleClass="community-label"/>
+
+                <HBox styleClass="action-row" spacing="12">
+                    <Button text="REGISTRATION" styleClass="btn-outline" onAction="#onRegistration" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    <!-- Hidden (not deleted) in LauncherController#initialize() - loginButton takes
+                         its place in the action row until the client bootstrap/login flow lands. -->
+                    <Button fx:id="startGameButton" text="START GAME" styleClass="btn-primary" onAction="#onStartGame" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    <Button fx:id="loginButton" text="LOGIN" styleClass="btn-primary" onAction="#onLogin" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                </HBox>
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <!-- Logo overlay: floats above the panel (unclipped) so it can extend past its top edge,
+         matching launcher-template.png. Sized/positioned so its bottom lines up with where
+         the in-flow logo used to sit (see the logo-spacer above); mouseTransparent so the
+         top-bar drag handling underneath still works through it. -->
+    <ImageView fitWidth="480" preserveRatio="true" mouseTransparent="true"
+               styleClass="logo" StackPane.alignment="TOP_CENTER">
+        <Image url="@/images/logo.png" backgroundLoading="true"/>
+    </ImageView>
+</StackPane>

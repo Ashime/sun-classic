@@ -19,6 +19,10 @@ public class DatabaseServerConfig
     @Getter
     private static int disconnect;
 
+    // [SECURITY]
+    @Getter
+    private static int hmacTimestampOffset;
+
     // [SERVER]
     @Getter
     private static String ipAddress;
@@ -30,6 +34,14 @@ public class DatabaseServerConfig
     private static int workingThreads;
     @Getter
     private static int bufferSize;
+
+    // [TLS]
+    @Getter
+    private static String tlsCertPath;
+    @Getter
+    private static String tlsKeyPath;
+    @Getter
+    private static String tlsCaPath;
 
     @SneakyThrows
     public DatabaseServerConfig()
@@ -44,6 +56,7 @@ public class DatabaseServerConfig
         AES.setRecreateAesKey(ini.get("SECURITY", "RECREATE_AES_KEY", boolean.class));
         SHA.setRecreateHmacKey(ini.get("SECURITY", "RECREATE_HMAC_KEY", boolean.class));
         BCRYPT.setLogRounds(ini.get("SECURITY", "BCRYPT_ROUNDS", int.class));
+        hmacTimestampOffset = ini.get("SECURITY", "HMAC_TIMESTAMP_OFFSET", int.class);
 
         // [SERVER]
         ipAddress = ini.get("SERVER", "IP", String.class);
@@ -51,6 +64,11 @@ public class DatabaseServerConfig
         acceptThreads = ini.get("SERVER", "ACCEPT_THREADS", int.class);
         workingThreads = ini.get("SERVER", "WORKING_THREADS", int.class);
         bufferSize = ini.get("SERVER", "BUFFER_SIZE", int.class);
+
+        // [TLS]
+        tlsCertPath = ini.get("TLS", "CERT_PATH", String.class);
+        tlsKeyPath = ini.get("TLS", "KEY_PATH", String.class);
+        tlsCaPath = ini.get("TLS", "CA_PATH", String.class);
 
         ini.clear();
     }

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- UI only: no field validation and the submit button doesn't call anything yet - there's
+     no registration endpoint on auth-server/database-server to send this to. -->
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<StackPane fx:id="regRoot" styleClass="root-pane" xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml" fx:controller="com.valiantgaming.launcher.controller.RegistrationController">
+
+    <VBox styleClass="reg-panel" prefWidth="420" maxWidth="420">
+
+        <HBox fx:id="regTopBar" styleClass="reg-top-bar" alignment="CENTER_RIGHT">
+            <Button styleClass="icon-button, close-button" onAction="#onClose">
+                <graphic><FontIcon iconLiteral="fas-times" styleClass="icon-glyph"/></graphic>
+            </Button>
+        </HBox>
+
+        <VBox styleClass="reg-body" spacing="16">
+            <Label text="Create Account" styleClass="reg-title"/>
+            <Label text="Join SUN Classic and start your adventure." styleClass="reg-subtitle" wrapText="true"/>
+
+            <VBox styleClass="field-group" spacing="6">
+                <Label text="Username" styleClass="field-label"/>
+                <TextField promptText="Enter username" styleClass="text-input"/>
+            </VBox>
+
+            <VBox styleClass="field-group" spacing="6">
+                <Label text="Email" styleClass="field-label"/>
+                <TextField promptText="you@example.com" styleClass="text-input"/>
+            </VBox>
+
+            <VBox styleClass="field-group" spacing="6">
+                <Label text="Date of Birth" styleClass="field-label"/>
+                <HBox spacing="10">
+                    <ComboBox fx:id="dobMonth" promptText="Month" styleClass="combo-input" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    <ComboBox fx:id="dobDay" promptText="Day" styleClass="combo-input" prefWidth="96"/>
+                </HBox>
+            </VBox>
+
+            <VBox styleClass="field-group" spacing="6">
+                <Label text="Password" styleClass="field-label"/>
+                <PasswordField promptText="Enter password" styleClass="text-input"/>
+            </VBox>
+
+            <Region prefHeight="4"/>
+
+            <Button text="CREATE ACCOUNT" styleClass="btn-primary" maxWidth="Infinity" onAction="#onSubmit"/>
+            <Button text="CANCEL" styleClass="btn-outline" maxWidth="Infinity" onAction="#onClose"/>
+        </VBox>
+    </VBox>
+</StackPane>

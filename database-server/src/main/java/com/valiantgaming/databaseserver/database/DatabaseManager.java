@@ -37,7 +37,8 @@ public class DatabaseManager
         HibernateSession.createSessionFactory();
 
         EncryptionKeyDAO encKeyDAO = new EncryptionKeyDAO(HibernateSession.createSession());
-        AES aes = new AES();
+        SHA sha = SHA.getInstance();
+        AES aes = AES.getInstance();
 
         if(AES.isRecreateAesKey())
         {

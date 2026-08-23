@@ -16,6 +16,7 @@ public class IpFilter extends RuleBasedIpFilter
     {
         super(acceptIfNotFound, rules);
     }
+
     @Override
     protected boolean accept(ChannelHandlerContext ctx, InetSocketAddress remoteAddress) throws Exception
     {

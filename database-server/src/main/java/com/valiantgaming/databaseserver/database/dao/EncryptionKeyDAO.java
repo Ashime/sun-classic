@@ -8,7 +8,6 @@ import org.hibernate.Session;
 @Log4j2
 public class EncryptionKeyDAO
 {
-    private EncryptionKey encryptionKey;
     private final Session session;
 
     public EncryptionKeyDAO(Session session)
@@ -21,11 +20,12 @@ public class EncryptionKeyDAO
         StoredProcedureQuery query = session.createNamedStoredProcedureQuery("AddEncryptionKey")
                 .setParameter("encryptionKey", encryptionKey);
 
-        boolean status = query.execute();
+        query.execute();
 
-        if(status)
-            if(query.getSingleResult().toString().equals("SUCCESS!"))
-                return true;
+        if(query.getSingleResult().toString().equals("SUCCESS!"))
+        {
+            return true;
+        }
 
         log.error("SP AddEncryptionKey - " + query.getSingleResult().toString());
         return false;
@@ -33,7 +33,7 @@ public class EncryptionKeyDAO
 
     public EncryptionKey getKey(String keyName)
     {
-        encryptionKey = new EncryptionKey();
+        EncryptionKey encryptionKey = new EncryptionKey();
 
         StoredProcedureQuery query = session.createNamedStoredProcedureQuery("GetEncryptionKey")
                 .setParameter("keyName", keyName);

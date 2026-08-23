@@ -24,7 +24,7 @@ public class IpRules implements IpFilterRule
         String[] address = remoteAddress.toString().replace("/", "").split(":");
         boolean isAccepted = false;
 
-        assert  serverInfoList != null;
+        assert serverInfoList != null;
         for(ServerInfo s : serverInfoList)
         {
             if(s.isPublicEnabled() && (s.getPublicIP().equals(address[0]) && s.getPublicPort().equals(address[1])))

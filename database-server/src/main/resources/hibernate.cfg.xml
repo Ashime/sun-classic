@@ -5,16 +5,14 @@
     <session-factory>
         <!-- JDBC Database connection settings -->
         <property name="connection.driver_class">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
-        <property name="connection.url">jdbc:sqlserver://localhost:1433;databaseName=sun-classic;encrypt=true;trustServerCertificate=true;</property>
-        <property name="connection.username">SunClassic</property>
-        <property name="connection.password">J$#&amp;^!!bFeQp8AWp_v-EN2%3=x+9_@K4</property>
+        <property name="connection.url">jdbc:sqlserver://127.0.0.1:1433;databaseName=sun-classic;encrypt=true;trustServerCertificate=true;</property>
         <!-- JDBC connection pool settings ... using built-in test pool -->
         <property name="connection.pool_size">20</property>
         <!-- Select our SQL dialect -->
         <property name="dialect">org.hibernate.dialect.SQLServerDialect</property>
         <!-- Additional settings
         <property name="hibernate.connection.autocommit">false</property> -->
-        <property name="hibernate.connection.isolation">2</property>
+        <property name="connection.isolation">2</property>
         <!--<property name="hibernate.temp.use_jdbc_metadata_defaults">false</property>-->
         <!-- Echo the SQL to stdout -->
         <property name="show_sql">true</property>

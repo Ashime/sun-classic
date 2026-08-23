@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @NamedStoredProcedureQueries
@@ -35,8 +36,10 @@ import java.time.LocalDateTime;
 @Table @Entity
 @Getter @Setter
 @NoArgsConstructor
-public class ServerInfo
+public class ServerInfo implements Serializable
 {
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "ServerID")
