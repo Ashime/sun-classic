@@ -42,6 +42,12 @@ public class ClientSessionManager extends SessionManager
         session = null;
     }
 
+    @Override
+    public void clearSessions()
+    {
+        session = null;
+    }
+
     public static ClientSessionManager getInstance()
     {
         if(instance == null)

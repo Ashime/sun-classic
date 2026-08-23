@@ -1,6 +1,8 @@
-package com.valiantgaming.databaseserver.security.crypt;
+package com.valiantgaming.authserver.security.crypt;
 
-import com.valiantgaming.databaseserver.utility.Utility;
+import com.valiantgaming.commons.utility.Utility;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 
@@ -24,7 +26,10 @@ public class AES
     private static SecretKey secretKey;
     private static GCMParameterSpec gcmParameterSpec;
 
-    private static final String encFileName = "./Config/DatabaseServer/key.enc";
+    private static final String encFileName = "Config/key.enc";
+
+    @Getter @Setter
+    private static boolean recreateAesKey;
 
     @SneakyThrows
     public AES()

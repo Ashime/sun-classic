@@ -86,6 +86,12 @@ public class ServerSessionManager extends SessionManager
         }
     }
 
+    @Override
+    public void clearSessions()
+    {
+        serverSessions.clear();
+    }
+
     public static ServerSessionManager getInstance()
     {
         if(instance == null)

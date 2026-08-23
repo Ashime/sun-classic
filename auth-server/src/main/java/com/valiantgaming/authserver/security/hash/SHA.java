@@ -1,8 +1,7 @@
-package com.valiantgaming.databaseserver.security.hash;
+package com.valiantgaming.authserver.security.hash;
 
 // https://blog.mozilla.org/security/2011/05/10/sha-512-w-per-user-salts-is-not-enough/
 
-import com.valiantgaming.databaseserver.utility.Utility;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,7 +20,8 @@ public class SHA
     private static final int hmacKeySize = 64;
     @Getter @Setter
     private static boolean recreateHmacKey;
-    private static byte[] hmacKey;
+    @Setter
+    private static String hmacKey;
 
     @SneakyThrows
     public static byte[] generateHmacKey()
@@ -33,17 +33,12 @@ public class SHA
     }
 
     @SneakyThrows
-    public static byte[] hashMessage(String password)
+    public static byte[] getMac(String message)
     {
         Mac sha512Hmac = Mac.getInstance("HmacSHA512");
-        SecretKeySpec keySpec = new SecretKeySpec(hmacKey, "HmacSHA512");
+        SecretKeySpec keySpec = new SecretKeySpec(hmacKey.getBytes(StandardCharsets.UTF_8), "HmacSHA512");
         sha512Hmac.init(keySpec);
 
-        return sha512Hmac.doFinal(password.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public static void setHmacKey(String hmacKey)
-    {
-        SHA.hmacKey = Utility.hexStringToByteArray(hmacKey);
+        return sha512Hmac.doFinal((message + hmacKey).getBytes(StandardCharsets.UTF_8));
     }
 }
