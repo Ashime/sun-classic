@@ -49,7 +49,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
-            <version>4.0.6</version>
+            <version>4.0.7</version>
             <scope>compile</scope>
         </dependency>
         <!-- MAIL INTEGRATION -->
