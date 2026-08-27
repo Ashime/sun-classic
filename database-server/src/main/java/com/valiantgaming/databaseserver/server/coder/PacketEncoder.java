@@ -22,8 +22,8 @@ public class PacketEncoder extends ChannelOutboundHandlerAdapter implements Cate
 
         if(message[0] == Category.DATABASE)
         {
+            // Little-endian header - see PacketFraming.
             byte[] header = Utility.intToByteArray((short) message.length);
-            Utility.flip(header, 0, 1);
 
             byte[] packet = new byte[header.length + message.length];
             System.arraycopy(header, 0, packet, 0, header.length);

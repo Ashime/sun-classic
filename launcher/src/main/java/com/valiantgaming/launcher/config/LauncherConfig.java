@@ -49,6 +49,10 @@ public class LauncherConfig
     @Getter
     private static String registrationLink;
 
+    // [CLIENT]
+    @Getter
+    private static String clientPath;
+
     // [GAME_SERVER]
     @Getter
     private static String gameServerName;
@@ -66,6 +70,12 @@ public class LauncherConfig
     private static int authServerPort;
     @Getter
     private static int authServerWorkerThreads;
+
+    // [WEB_SERVER]
+    @Getter
+    private static String webServerIp;
+    @Getter
+    private static int webServerPort;
 
     @SneakyThrows
     public LauncherConfig()
@@ -86,6 +96,9 @@ public class LauncherConfig
         facebookLink = ini.get("LINKS", "FACEBOOK", String.class);
         registrationLink = ini.get("LINKS", "REGISTRATION", String.class);
 
+        // [CLIENT]
+        clientPath = ini.get("CLIENT", "PATH", String.class);
+
         // [GAME_SERVER]
         gameServerName = ini.get("GAME_SERVER", "NAME", String.class);
         connectServerEnabled = ini.get("GAME_SERVER", "CONNECT_SERVER_ENABLED", boolean.class);
@@ -97,6 +110,10 @@ public class LauncherConfig
         authServerIp = ini.get("AUTH_SERVER", "IP", String.class);
         authServerPort = ini.get("AUTH_SERVER", "PORT", int.class);
         authServerWorkerThreads = ini.get("AUTH_SERVER", "WORKER_THREADS", int.class);
+
+        // [WEB_SERVER]
+        webServerIp = ini.get("WEB_SERVER", "IP", String.class);
+        webServerPort = ini.get("WEB_SERVER", "PORT", int.class);
 
         ini.clear();
     }

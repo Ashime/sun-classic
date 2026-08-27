@@ -13,10 +13,11 @@ import lombok.extern.log4j.Log4j2;
  * passing the remaining {@code [category, protocol, ...data]} bytes down to
  * {@link com.valiantgaming.launcher.server.handler.ClientPacketHandler}.
  *
- * <p>Shell only: mirrors {@code auth-server}'s {@code ServerPacketDecoder} framing, but
- * doesn't decrypt anything yet since {@link com.valiantgaming.commons.security.crypt.TEA}
- * isn't implemented - see the {@code messageCryptEnabled} check below for where that hooks
- * in once it is.
+ * <p>Shell only: mirrors {@code auth-server}'s {@code ServerPacketDecoder} framing.
+ * {@link com.valiantgaming.commons.security.crypt.TEA} is implemented now, but the launcher
+ * never sends a password, and the reference it was ported from only ever applies TEA to a
+ * password field, not whole packets - so there's nothing for {@code messageCryptEnabled} to
+ * actually gate on this connection.
  */
 @Log4j2
 public class ClientPacketDecoder extends ChannelInboundHandlerAdapter
@@ -30,12 +31,10 @@ public class ClientPacketDecoder extends ChannelInboundHandlerAdapter
 
         if(session != null && session.isMessageCryptEnabled())
         {
-            // TODO: decrypt with TEA using session.getTeaKey() once TEA is implemented.
-            log.warn("Received packet while crypt is marked enabled, but TEA decryption isn't implemented yet.");
+            // Nothing currently sets this true - see the class comment above.
+            log.warn("Received packet while crypt is marked enabled, but nothing decrypts whole packets yet.");
         }
 
-        // Flip the size bytes around.
-        Utility.flip(packet, 0, 1);
         // Split the size header off.
         byte[] header = Utility.split(packet, 0, 2);
         // Split message from size header.

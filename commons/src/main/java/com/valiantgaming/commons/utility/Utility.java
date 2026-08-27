@@ -33,6 +33,27 @@ public class Utility
         return ByteBuffer.wrap(input).order(ByteOrder.LITTLE_ENDIAN).getShort();
     }
 
+    public static int byteArrayToInt(byte[] input)
+    {
+        return ByteBuffer.wrap(input).order(ByteOrder.LITTLE_ENDIAN).getInt();
+    }
+
+    /**
+     * Trims a byte array at its first {@code 0x00} byte, discarding everything from there on
+     * (a C-string-style trim) - e.g. for stripping null padding off a decrypted fixed-width
+     * field.
+     */
+    public static byte[] cutTail(byte[] input)
+    {
+        int length = 0;
+        while(length < input.length && input[length] != 0x00)
+        {
+            length++;
+        }
+
+        return Arrays.copyOf(input, length);
+    }
+
     /**
      * @param input  - The byte[] that you wish to flip some bytes in.
      * @param index1 - The index of the byte you wish to flip.
@@ -71,6 +92,22 @@ public class Utility
                 .order(ByteOrder.LITTLE_ENDIAN)
                 .putShort(input)
                 .array();
+    }
+
+    /**
+     * Packs one or more ints into a little-endian byte array, 4 bytes each, in order
+     * (e.g. {@code intToByteArray(v0, v1)} -> 8 bytes: v0's bytes then v1's bytes).
+     */
+    public static byte[] intToByteArray(int... input)
+    {
+        ByteBuffer buffer = ByteBuffer.allocate(input.length * 4).order(ByteOrder.LITTLE_ENDIAN);
+
+        for(int i : input)
+        {
+            buffer.putInt(i);
+        }
+
+        return buffer.array();
     }
 
     public static byte[] longToBytes(long input)

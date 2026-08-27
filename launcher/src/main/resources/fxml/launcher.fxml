@@ -90,6 +90,16 @@
 
             <!-- Left: preview art + progress -->
             <VBox styleClass="media-panel" spacing="22" HBox.hgrow="ALWAYS">
+
+                <!-- Hidden (and unmanaged, so it takes no vertical space) until a login
+                     succeeds - filled in by LauncherController#showLoggedInUser. -->
+                <HBox fx:id="loggedInUserRow" styleClass="logged-in-row" alignment="CENTER_LEFT"
+                      spacing="8" managed="false" visible="false">
+                    <FontIcon iconLiteral="fas-user" styleClass="icon-glyph, logged-in-icon"/>
+                    <Label text="Logged in as" styleClass="logged-in-label"/>
+                    <Label fx:id="loggedInUserValue" styleClass="logged-in-user"/>
+                </HBox>
+
                 <Region styleClass="preview-art" VBox.vgrow="ALWAYS"/>
 
                 <VBox styleClass="progress-section" spacing="10">
@@ -143,10 +153,11 @@
                 <Separator styleClass="community-divider"/>
                 <Label text="Join our community!" styleClass="community-label"/>
 
+                <!-- Signed out: REGISTRATION + LOGIN. Signed in: START GAME takes the whole row.
+                     The swap happens in LauncherController#showLoggedInUser(); startGameButton
+                     starts hidden via #initialize(). -->
                 <HBox styleClass="action-row" spacing="12">
-                    <Button text="REGISTRATION" styleClass="btn-outline" onAction="#onRegistration" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                    <!-- Hidden (not deleted) in LauncherController#initialize() - loginButton takes
-                         its place in the action row until the client bootstrap/login flow lands. -->
+                    <Button fx:id="registrationButton" text="REGISTRATION" styleClass="btn-outline" onAction="#onRegistration" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
                     <Button fx:id="startGameButton" text="START GAME" styleClass="btn-primary" onAction="#onStartGame" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
                     <Button fx:id="loginButton" text="LOGIN" styleClass="btn-primary" onAction="#onLogin" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
                 </HBox>

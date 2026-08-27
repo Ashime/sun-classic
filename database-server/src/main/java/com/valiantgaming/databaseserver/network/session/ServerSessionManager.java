@@ -61,15 +61,10 @@ public class ServerSessionManager extends SessionManager
     public void updateSession(Object object)
     {
         ServerSession session = (ServerSession) object;
-        for(ServerSession s : serverSessions)
+
+        if(serverSessions.removeIf(s -> s.getServerInfo().equals(session.getServerInfo())))
         {
-            if(s.getServerInfo().equals(session.getServerInfo()))
-            {
-                if(serverSessions.remove(s))
-                {
-                    serverSessions.add(session);
-                }
-            }
+            serverSessions.add(session);
         }
     }
 
@@ -77,13 +72,7 @@ public class ServerSessionManager extends SessionManager
     public void removeSession(Object object)
     {
         ServerSession session = (ServerSession) object;
-        for(ServerSession s : serverSessions)
-        {
-            if(s.getServerInfo().equals(session.getServerInfo()))
-            {
-                serverSessions.remove(s);
-            }
-        }
+        serverSessions.removeIf(s -> s.getServerInfo().equals(session.getServerInfo()));
     }
 
     @Override

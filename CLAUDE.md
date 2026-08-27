@@ -27,7 +27,7 @@ The root-level `src/` directory (`com.valiantgaming.sunclassic.SunClassicApplica
 ## Architecture
 
 ### Modules
-- **commons** — shared code used by every other module: the binary packet protocol contracts (`Protocol`, `Category`), session abstractions (`ClientSession`, `ServerSession`, `SessionManager`), crypto primitives (`AES`, `RSA`, `TEA`, `BCRYPT`, `SHA`), and `IpFilter`/`Utility` helpers. Build this first when it changes.
+- **commons** — shared code used by every other module: the binary packet protocol contracts (`Protocol`, `Category`), session abstractions (`ClientSession`, `ServerSession`, `SessionManager`), crypto primitives (`AES`, `RSA`, `TEA`, `ARGON2`, `SHA`), and `IpFilter`/`Utility` helpers. Build this first when it changes.
 - **database-server** — the authority for all persistent state (accounts, characters, inventory, equipment, server registry) via Hibernate (`HibernateSession`, `*DAO` classes, `database/entity/**`). Every other server connects to it as an S2S client and never touches SQL Server directly.
 - **auth-server** — handles login/authentication and server-list selection for the game client (`network/packet/client/**`), and is itself an S2S client of database-server.
 - **game-server**, **web-server**, **launcher** — scaffolded modules (mostly a bare `*Application` class today); expect to build out packet handling for these following the same patterns as `auth-server`.

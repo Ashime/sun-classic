@@ -1,8 +1,13 @@
 package com.valiantgaming.authserver.server.handler;
 
 import com.valiantgaming.authserver.database.entity.server.ServerInfo;
+import com.valiantgaming.authserver.network.packet.client.AnsAuthUser;
 import com.valiantgaming.authserver.network.packet.server.AskServerInfo;
+import com.valiantgaming.authserver.network.packet.server.handler.GetAuthUser;
 import com.valiantgaming.authserver.network.packet.server.handler.GetServerInfo;
+import com.valiantgaming.authserver.network.session.client.ClientSession;
+import com.valiantgaming.authserver.network.session.client.ClientSessionManager;
+import com.valiantgaming.authserver.network.session.server.PendingAuthRequests;
 import com.valiantgaming.authserver.network.session.server.ServerSession;
 import com.valiantgaming.authserver.network.session.server.ServerSessionManager;
 import com.valiantgaming.commons.network.packet.Protocol;
@@ -82,6 +87,30 @@ public class ServerPacketHandler extends ChannelDuplexHandler
         {
             ServerInfo serverInfo = GetServerInfo.decode(message);
             log.info("Received ServerInfo response from " + ctx.channel().remoteAddress() + ": " + serverInfo);
+        }
+        else if(message[1] == Protocol.S2S_ansAuthUser)
+        {
+            GetAuthUser.AuthUserResult result = GetAuthUser.decode(message);
+            PendingAuthRequests.PendingAuthRequest pendingRequest = PendingAuthRequests.resolve(result.requestId());
+
+            if(pendingRequest == null)
+            {
+                log.warn("Received S2S_ansAuthUser for an unknown or already-resolved request ID {}", result.requestId());
+                return;
+            }
+
+            ClientSession clientSession = ClientSessionManager.getInstance().getSession(pendingRequest.ctx());
+            if(clientSession != null)
+            {
+                clientSession.setAuthenticated(result.authenticated());
+
+                if(result.authenticated())
+                {
+                    clientSession.setUsername(pendingRequest.username());
+                }
+            }
+
+            pendingRequest.ctx().writeAndFlush(AnsAuthUser.createPacket(result.authenticated()));
         }
     }
 }

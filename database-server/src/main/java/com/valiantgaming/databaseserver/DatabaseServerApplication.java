@@ -1,7 +1,12 @@
 package com.valiantgaming.databaseserver;
 
+import com.valiantgaming.commons.security.hash.SHA;
 import com.valiantgaming.databaseserver.config.ConfigManager;
 import com.valiantgaming.databaseserver.database.DatabaseManager;
+import com.valiantgaming.databaseserver.database.HibernateSession;
+import com.valiantgaming.databaseserver.database.dao.account.AccountDAO;
+import com.valiantgaming.databaseserver.database.entity.Profile;
+import com.valiantgaming.databaseserver.database.entity.account.Account;
 import com.valiantgaming.databaseserver.server.NioServer;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
@@ -40,6 +45,7 @@ public class DatabaseServerApplication
             ConfigManager.getInstance();
             DatabaseManager.getInstance();
             NioServer.getInstance();
+
         }
     }
 }

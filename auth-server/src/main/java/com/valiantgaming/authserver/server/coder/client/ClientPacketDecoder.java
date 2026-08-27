@@ -15,9 +15,11 @@ import lombok.extern.log4j.Log4j2;
  * to {@link com.valiantgaming.authserver.server.handler.ClientPacketHandler}.
  *
  * <p>Mirrors {@code ServerPacketDecoder}'s S2S framing, but there's no RSA packet-wrapping
- * layer here - just the single TEA message key from {@code A2U_ansReady}. TEA itself isn't
- * implemented yet ({@link com.valiantgaming.commons.security.crypt.TEA} is an empty stub), so
- * {@code messageCryptEnabled} only gates logging/intent for now.
+ * layer here. {@link com.valiantgaming.commons.security.crypt.TEA} is implemented now, but
+ * the reference it was ported from only ever uses it to decrypt a single password field
+ * (see {@code AuthUser}), not whole packets - whether this protocol encrypts full packet
+ * bodies at all is still unconfirmed, so {@code messageCryptEnabled} and the decrypt hook
+ * below remain speculative rather than something to rely on.
  */
 @Log4j2
 public class ClientPacketDecoder extends ChannelInboundHandlerAdapter
@@ -32,12 +34,11 @@ public class ClientPacketDecoder extends ChannelInboundHandlerAdapter
 
         if(session != null && session.isMessageCryptEnabled())
         {
-            // TODO: decrypt with TEA using session.getTeaKey() once TEA is implemented.
-            log.warn("Received packet while crypt is marked enabled, but TEA decryption isn't implemented yet.");
+            // Nothing currently sets this true - see the class comment above. Kept as a hook
+            // in case whole-packet encryption turns out to be part of this protocol after all.
+            log.warn("Received packet while crypt is marked enabled, but nothing decrypts whole packets yet.");
         }
 
-        // Flip the size bytes around.
-        Utility.flip(packet, 0, 1);
         // Split the size header off.
         byte[] header = Utility.split(packet, 0, 2);
         // Split message from size header.

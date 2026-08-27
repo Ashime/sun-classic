@@ -4,6 +4,7 @@ import com.valiantgaming.authserver.database.entity.server.ServerInfo;
 import com.valiantgaming.authserver.security.crypt.AES;
 import com.valiantgaming.authserver.security.crypt.RSA;
 import com.valiantgaming.commons.network.session.SessionManager;
+import io.netty.channel.Channel;
 import lombok.extern.log4j.Log4j2;
 
 import java.net.InetSocketAddress;
@@ -16,6 +17,19 @@ public class ServerSessionManager extends SessionManager
     private final ArrayList<ServerSession> serverSessions = new ArrayList<>();
     private static final RSA rsa = new RSA();
     private static final AES aes = new AES();
+
+    /** The single outbound S2S channel to the Database Server, set once {@code NioServer.initS2S()} connects. */
+    private static Channel channel;
+
+    public static void setChannel(Channel channel)
+    {
+        ServerSessionManager.channel = channel;
+    }
+
+    public static Channel getChannel()
+    {
+        return channel;
+    }
 
     @Override
     public void addSession(Object object)
@@ -52,30 +66,24 @@ public class ServerSessionManager extends SessionManager
     @Override
     public void updateSession(Object object)
     {
+        // removeIf rather than remove-inside-a-for-each: mutating the list while iterating it
+        // throws ConcurrentModificationException on the following iteration.
         ServerSession session = (ServerSession) object;
-        for(ServerSession s : serverSessions)
+
+        if(serverSessions.removeIf(s -> s.getServerInfo().equals(session.getServerInfo())))
         {
-            if(s.getServerInfo().equals(session.getServerInfo()))
-            {
-                if(serverSessions.remove(s))
-                {
-                    serverSessions.add(session);
-                }
-            }
+            serverSessions.add(session);
         }
     }
 
     @Override
     public void removeSession(Object object)
     {
+        // Same reason as updateSession: this previously removed from serverSessions while a
+        // for-each was iterating it, which threw ConcurrentModificationException out of
+        // ServerPacketHandler.channelInactive and masked the real cause of a dropped connection.
         ServerSession session = (ServerSession) object;
-        for(ServerSession s : serverSessions)
-        {
-            if(s.getServerInfo().equals(session.getServerInfo()))
-            {
-                serverSessions.remove(s);
-            }
-        }
+        serverSessions.removeIf(s -> s.getServerInfo().equals(session.getServerInfo()));
     }
 
     @Override

@@ -10,8 +10,13 @@
         <property name="connection.pool_size">20</property>
         <!-- Select our SQL dialect -->
         <property name="dialect">org.hibernate.dialect.SQLServerDialect</property>
-        <!-- Additional settings
-        <property name="hibernate.connection.autocommit">false</property> -->
+        <!-- Every DAO call is a single stored-procedure invocation, and every one of those procedures already
+             manages its own atomic transaction internally (BEGIN/COMMIT/ROLLBACK TRANSACTION) - Hibernate never
+             opens a matching transaction of its own around them (no code calls session.getTransaction().commit()),
+             so without this, each call leaves its pooled connection checked out with an open, uncommitted
+             transaction forever (confirmed: idle pooled connections sitting with open_transaction_count = 1),
+             which will eventually exhaust the connection pool and deadlock the server under real traffic. -->
+        <property name="hibernate.connection.autocommit">true</property>
         <property name="connection.isolation">2</property>
         <!--<property name="hibernate.temp.use_jdbc_metadata_defaults">false</property>-->
         <!-- Echo the SQL to stdout -->

@@ -3,12 +3,14 @@ package com.valiantgaming.launcher.network.packet.server.handler;
 import com.valiantgaming.commons.utility.Utility;
 
 /**
- * Decodes {@code A2L_ansReady}, which per the flow comment in {@code Protocol} delivers the
- * TEA key that turns on packet encryption for the rest of the launcher/AuthServer handshake.
+ * Decodes {@code A2L_ansReady}. The original flow notes in {@code Protocol} labelled this
+ * packet "(Tea Key)", but {@link com.valiantgaming.commons.security.crypt.TEA} turned out to
+ * only ever decrypt a password field, and the launcher never sends one - see
+ * {@code AnsLauncherReady}'s class comment on the server side, which currently sends this
+ * packet with no payload at all.
  *
- * <p>No example of this packet has been captured yet (unlike {@code A2L_ansVerifyVersion}),
- * so the key is taken as "everything after category+protocol" with no length validation.
- * Revisit once a real capture confirms the key size/format.
+ * <p>Still returns "everything after category+protocol" rather than assuming zero length,
+ * in case a real capture of this packet later shows it does carry something.
  */
 public class GetReady
 {

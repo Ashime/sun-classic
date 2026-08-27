@@ -13,8 +13,8 @@ import lombok.extern.log4j.Log4j2;
  * Prefixes an outbound {@code [category, protocol, ...data]} packet with its 2-byte
  * little-endian size header before it hits the wire.
  *
- * <p>Shell only: mirrors {@code auth-server}'s {@code ServerPacketEncoder} framing, but
- * doesn't encrypt anything yet - see {@link ClientPacketDecoder}'s class comment.
+ * <p>Shell only: mirrors {@code auth-server}'s {@code ServerPacketEncoder} framing - see
+ * {@link ClientPacketDecoder}'s class comment for why there's nothing to encrypt here.
  */
 @Log4j2
 public class ClientPacketEncoder extends ChannelOutboundHandlerAdapter
@@ -31,8 +31,8 @@ public class ClientPacketEncoder extends ChannelOutboundHandlerAdapter
             return;
         }
 
+        // Little-endian header, matching auth-server's client listener - see PacketFraming.
         byte[] header = Utility.intToByteArray((short) message.length);
-        Utility.flip(header, 0, 1);
 
         byte[] packet = new byte[header.length + message.length];
         System.arraycopy(header, 0, packet, 0, header.length);
@@ -41,8 +41,8 @@ public class ClientPacketEncoder extends ChannelOutboundHandlerAdapter
         ClientSession session = ClientSessionManager.getInstance().getSession(ctx);
         if(session != null && session.isMessageCryptEnabled())
         {
-            // TODO: encrypt with TEA using session.getTeaKey() once TEA is implemented.
-            log.warn("Sending packet while crypt is marked enabled, but TEA encryption isn't implemented yet.");
+            // Nothing currently sets this true - see ClientPacketDecoder's class comment.
+            log.warn("Sending packet while crypt is marked enabled, but nothing encrypts whole packets yet.");
         }
 
         log.info(Utility.byteArrayToHexString(packet));

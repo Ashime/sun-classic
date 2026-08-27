@@ -1,5 +1,6 @@
 package com.valiantgaming.launcher.server;
 
+import com.valiantgaming.commons.network.packet.PacketFraming;
 import com.valiantgaming.launcher.config.LauncherConfig;
 import com.valiantgaming.launcher.server.coder.ClientPacketDecoder;
 import com.valiantgaming.launcher.server.coder.ClientPacketEncoder;
@@ -56,6 +57,11 @@ public class NioClient
             {
                 // Inactivity Handler. Ping AuthServer every # seconds of inactivity and DC after # seconds.
                 ch.pipeline().addLast("idleStateHandler", new IdleStateHandler(0, 0, disconnect));
+
+                // Reassembles the 2-byte-length-prefixed frame each PacketEncoder writes, so a
+                // frame split across TCP reads (or several coalesced into one) always reaches
+                // byteDecoder as exactly one frame - see PacketFraming's class comment.
+                ch.pipeline().addLast("frameDecoder", PacketFraming.newFrameDecoder());
 
                 // Encoder/Decoder for converting ByteBuf into byte[] and vice versa.
                 ch.pipeline().addLast("byteDecoder", new ByteArrayDecoder());

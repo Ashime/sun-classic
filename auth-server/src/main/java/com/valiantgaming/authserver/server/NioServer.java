@@ -11,6 +11,7 @@ import com.valiantgaming.authserver.server.coder.server.ServerPacketEncoder;
 import com.valiantgaming.authserver.server.handler.ClientPacketHandler;
 import com.valiantgaming.authserver.server.handler.ServerPacketHandler;
 import com.valiantgaming.commons.network.firewall.IpFilter;
+import com.valiantgaming.commons.network.packet.PacketFraming;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -92,6 +93,11 @@ public class NioServer
                 // Inactivity Handler. Ping the client every # seconds of inactivity and DC client after # seconds.
                 ch.pipeline().addLast("idleStateHandler", new IdleStateHandler(0, 0, disconnect));
 
+                // Reassembles the 2-byte-length-prefixed frame each PacketEncoder writes, so a
+                // frame split across TCP reads (or several coalesced into one) always reaches
+                // byteDecoder as exactly one frame - see PacketFraming's class comment.
+                ch.pipeline().addLast("frameDecoder", PacketFraming.newFrameDecoder());
+
                 // Encoder/Decoder for converting ByteBuf into byte[] and vise versa.
                 ch.pipeline().addLast("byteDecoder", new ByteArrayDecoder());
                 ch.pipeline().addLast("byteEncoder", new ByteArrayEncoder());
@@ -116,6 +122,7 @@ public class NioServer
         if(cf.isSuccess())
         {
             log.info("Server successfully connected to " + dbServerIPAddress + ":" + dbServerPort);
+            ServerSessionManager.setChannel(cf.channel());
 
             while(cf.channel().isRegistered())
             {
@@ -153,6 +160,11 @@ public class NioServer
                 // Inactivity Handler. Ping the client every # seconds of inactivity and DC client after # seconds.
                 ch.pipeline().addLast("idleStateHandler", new IdleStateHandler(0, 0, disconnect));
 
+                // Reassembles the 2-byte-length-prefixed frame each PacketEncoder writes, so a
+                // frame split across TCP reads (or several coalesced into one) always reaches
+                // byteDecoder as exactly one frame - see PacketFraming's class comment.
+                ch.pipeline().addLast("frameDecoder", PacketFraming.newFrameDecoder());
+
                 // Encoder/Decoder for converting ByteBuf into byte[] and vise versa.
                 ch.pipeline().addLast("byteDecoder", new ByteArrayDecoder());
                 ch.pipeline().addLast("byteEncoder", new ByteArrayEncoder());
@@ -185,6 +197,7 @@ public class NioServer
         // Sessions are tied to the connections these event loop groups were serving, so once
         // those are torn down the session list is stale - clear it rather than let it leak.
         ServerSessionManager.getInstance().clearSessions();
+        ServerSessionManager.setChannel(null);
         ClientSessionManager.getInstance().clearSessions();
 
         log.info("Server has successfully shutdown!");

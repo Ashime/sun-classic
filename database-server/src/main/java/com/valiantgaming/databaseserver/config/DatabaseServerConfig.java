@@ -1,7 +1,7 @@
 package com.valiantgaming.databaseserver.config;
 
 import com.valiantgaming.commons.security.crypt.AES;
-import com.valiantgaming.commons.security.crypt.BCRYPT;
+import com.valiantgaming.commons.security.crypt.ARGON2;
 import com.valiantgaming.commons.security.hash.SHA;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -55,7 +55,9 @@ public class DatabaseServerConfig
         // [SECURITY]
         AES.setRecreateAesKey(ini.get("SECURITY", "RECREATE_AES_KEY", boolean.class));
         SHA.setRecreateHmacKey(ini.get("SECURITY", "RECREATE_HMAC_KEY", boolean.class));
-        BCRYPT.setLogRounds(ini.get("SECURITY", "BCRYPT_ROUNDS", int.class));
+        ARGON2.setMemoryKb(ini.get("SECURITY", "ARGON2_MEMORY_KB", int.class));
+        ARGON2.setIterations(ini.get("SECURITY", "ARGON2_ITERATIONS", int.class));
+        ARGON2.setParallelism(ini.get("SECURITY", "ARGON2_PARALLELISM", int.class));
         hmacTimestampOffset = ini.get("SECURITY", "HMAC_TIMESTAMP_OFFSET", int.class);
 
         // [SERVER]

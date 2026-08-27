@@ -1,6 +1,7 @@
 package com.valiantgaming.databaseserver.server;
 
 import com.valiantgaming.commons.network.firewall.IpFilter;
+import com.valiantgaming.commons.network.packet.PacketFraming;
 import com.valiantgaming.databaseserver.config.DatabaseServerConfig;
 import com.valiantgaming.databaseserver.network.firewall.IpRules;
 import com.valiantgaming.databaseserver.server.coder.PacketDecoder;
@@ -70,6 +71,11 @@ public class NioServer
 
                 // Inactivity Handler. Ping the client every # seconds of inactivity and DC client after # seconds.
                 ch.pipeline().addLast("idleStateHandler", new IdleStateHandler(0, 0, disconnect));
+
+                // Reassembles the 2-byte-length-prefixed frame each PacketEncoder writes, so a
+                // frame split across TCP reads (or several coalesced into one) always reaches
+                // byteDecoder as exactly one frame - see PacketFraming's class comment.
+                ch.pipeline().addLast("frameDecoder", PacketFraming.newFrameDecoder());
 
                 // Encoder/Decoder for converting ByteBuf into byte[] and vise versa.
                 ch.pipeline().addLast("byteDecoder", new ByteArrayDecoder());
