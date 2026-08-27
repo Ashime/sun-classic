@@ -288,6 +288,29 @@
     -fx-background-color: linear-gradient(to bottom, #ffffff, #e7ecee);
 }
 
+/* ----- Signed-in user (left column, above the preview art) ----- */
+
+.logged-in-row {
+    -fx-padding: 0 0 2 2;
+}
+
+.logged-in-icon {
+    -fx-icon-size: 13;
+    -fx-icon-color: #8b969b;
+}
+
+.logged-in-label {
+    -fx-text-fill: #8b969b;
+    -fx-font-size: 12.5;
+}
+
+/* Same accent the Server Time value uses, so the two read as one system. */
+.logged-in-user {
+    -fx-text-fill: #FBCB20;
+    -fx-font-size: 12.5;
+    -fx-font-weight: bold;
+}
+
 /* ---------------- Registration window ---------------- */
 
 .reg-panel {
@@ -307,6 +330,26 @@
     -fx-padding: 4 32 32 32;
 }
 
+.reg-scroll,
+.reg-scroll .viewport {
+    -fx-background-color: transparent;
+}
+
+.reg-scroll .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-padding: 0 2 0 0;
+}
+
+.form-status {
+    -fx-font-size: 12;
+    -fx-wrap-text: true;
+    -fx-text-fill: #e5484d;
+}
+
+.form-status.form-status-success {
+    -fx-text-fill: #3ddc84;
+}
+
 .reg-title {
     -fx-text-fill: #ffffff;
     -fx-font-size: 20;
@@ -321,6 +364,12 @@
 
 .field-label {
     -fx-text-fill: #d7dee2;
+    -fx-font-size: 12;
+    -fx-font-weight: bold;
+}
+
+.required-marker {
+    -fx-text-fill: #e5484d;
     -fx-font-size: 12;
     -fx-font-weight: bold;
 }

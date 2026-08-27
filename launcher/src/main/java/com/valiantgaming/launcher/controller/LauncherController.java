@@ -1,6 +1,10 @@
 package com.valiantgaming.launcher.controller;
 
 import com.valiantgaming.launcher.config.LauncherConfig;
+import com.valiantgaming.launcher.network.session.ClientSession;
+import com.valiantgaming.launcher.network.session.ClientSessionManager;
+import com.valiantgaming.launcher.util.GameClientLauncher;
+import com.valiantgaming.launcher.util.ServerHealthCheck;
 import com.valiantgaming.launcher.util.WindowDragSupport;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -10,6 +14,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -30,14 +35,19 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Controller for {@code /fxml/launcher.fxml}, the launcher's main (non-modal) window.
  *
  * <p>Owns the window chrome (drag, minimize, close), the live server-time clock, the
- * online/offline status dots (currently driven from the static
- * {@link LauncherConfig#isConnectServerEnabled()} flag rather than a real health check),
- * and opening the login/registration/settings modals. Each modal has its own FXML +
+ * online/offline status dots, and opening the login/registration/settings modals. The
+ * "Login Server" dot ({@code connectServerStatus}) is polled live against AuthServer (see
+ * {@link #startAuthServerHealthCheck()}); the "Game Server" dot is still driven from the
+ * static {@link LauncherConfig#isConnectServerEnabled()} flag since game-server has no
+ * real listener yet to check. Each modal has its own FXML +
  * controller ({@link LoginController}, {@link RegistrationController},
  * {@link SettingsController}) rather than sharing this one, since they're independent
  * windows with their own lifecycle.
@@ -59,6 +69,9 @@ public class LauncherController
     private static final double EVENTS_PANEL_CORNER_RADIUS = 10;
     private static final double EVENTS_PANEL_BEVEL_SIZE = 20;
 
+    private static final int AUTH_SERVER_CHECK_INTERVAL_SECONDS = 5;
+    private static final int AUTH_SERVER_CHECK_TIMEOUT_MILLIS = 2000;
+
     @FXML
     private StackPane rootPane;
     @FXML
@@ -69,6 +82,10 @@ public class LauncherController
     @FXML
     private Label serverTimeValue;
     @FXML
+    private HBox loggedInUserRow;
+    @FXML
+    private Label loggedInUserValue;
+    @FXML
     private Circle connectServerStatus;
     @FXML
     private Circle gameServerStatus;
@@ -78,6 +95,10 @@ public class LauncherController
     private SVGPath eventsPanelOutline;
     @FXML
     private Button startGameButton;
+    @FXML
+    private Button registrationButton;
+    @FXML
+    private Button loginButton;
 
     @FXML
     private void initialize()
@@ -86,8 +107,10 @@ public class LauncherController
         wireBeveledOutline(eventsPanelOutline, eventsPanel, EVENTS_PANEL_CORNER_RADIUS, EVENTS_PANEL_BEVEL_SIZE);
 
         boolean connectServerOn = LauncherConfig.isConnectServerEnabled();
-        connectServerStatus.getStyleClass().add(connectServerOn ? "status-online" : "status-offline");
         gameServerStatus.getStyleClass().add(connectServerOn ? "status-online" : "status-offline");
+
+        connectServerStatus.getStyleClass().add("status-offline");
+        startAuthServerHealthCheck();
 
         Timeline clock = new Timeline(new KeyFrame(Duration.ZERO, e -> updateServerTime()), new KeyFrame(Duration.seconds(1)));
         clock.setCycleCount(Timeline.INDEFINITE);
@@ -95,10 +118,9 @@ public class LauncherController
 
         WindowDragSupport.enable(topBar, rootPane);
 
-        // Kept in the FXML (not deleted) so it's a one-line change to bring back once the
-        // client bootstrap/login flow is real; loginButton sits in its place until then.
-        startGameButton.setVisible(false);
-        startGameButton.setManaged(false);
+        // Signed-out state: REGISTRATION + LOGIN occupy the action row. showLoggedInUser()
+        // swaps START GAME in once a login succeeds.
+        setButtonShown(startGameButton, false);
     }
 
     // Traces the same bevelled-top-right / rounded-elsewhere outline as the shellOutline
@@ -149,6 +171,35 @@ public class LauncherController
         serverTimeValue.setText(LocalTime.now().format(SERVER_TIME_FORMAT));
     }
 
+    /**
+     * Polls AuthServer's reachability on a daemon background thread (a raw connect attempt
+     * would block the FX Application Thread if run directly from a {@link Timeline}) and
+     * reflects the result on {@link #connectServerStatus}. Runs once immediately, then every
+     * {@link #AUTH_SERVER_CHECK_INTERVAL_SECONDS} seconds for as long as the launcher is open -
+     * the executor's daemon thread doesn't need an explicit shutdown to let the JVM exit.
+     */
+    private void startAuthServerHealthCheck()
+    {
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(runnable ->
+        {
+            Thread thread = new Thread(runnable, "auth-server-health-check");
+            thread.setDaemon(true);
+            return thread;
+        });
+
+        executor.scheduleWithFixedDelay(() ->
+        {
+            boolean reachable = ServerHealthCheck.isReachable(
+                    LauncherConfig.getAuthServerIp(), LauncherConfig.getAuthServerPort(), AUTH_SERVER_CHECK_TIMEOUT_MILLIS);
+
+            Platform.runLater(() ->
+            {
+                connectServerStatus.getStyleClass().removeAll("status-online", "status-offline");
+                connectServerStatus.getStyleClass().add(reachable ? "status-online" : "status-offline");
+            });
+        }, 0, AUTH_SERVER_CHECK_INTERVAL_SECONDS, TimeUnit.SECONDS);
+    }
+
     @FXML
     private void onMinimize(ActionEvent event)
     {
@@ -194,14 +245,88 @@ public class LauncherController
     @FXML
     private void onLogin(ActionEvent event)
     {
+        // openModal blocks (showAndWait) until the login window closes, so by the time it
+        // returns the session carries the result of whatever the user did in there.
         openModal("/fxml/login.fxml", "login");
+        showLoggedInUser();
+    }
+
+    /**
+     * Switches the launcher into its signed-in state once {@link LoginController} has
+     * authenticated: reveals the username above the preview art, and swaps the action row from
+     * REGISTRATION + LOGIN over to START GAME (both of the former are pointless once you're
+     * signed in, and START GAME then spans the row on its own).
+     *
+     * <p>Does nothing if the modal was closed without a successful login, so the launcher stays
+     * exactly as it was.
+     */
+    private void showLoggedInUser()
+    {
+        ClientSession session = ClientSessionManager.getInstance().getSession();
+
+        if(session == null || !session.isAuthenticated() || session.getUsername() == null)
+            return;
+
+        loggedInUserValue.setText(session.getUsername());
+        loggedInUserRow.setManaged(true);
+        loggedInUserRow.setVisible(true);
+
+        setButtonShown(registrationButton, false);
+        setButtonShown(loginButton, false);
+        setButtonShown(startGameButton, true);
+    }
+
+    /** Shows/hides a button, keeping managed in step with visible so a hidden one leaves no gap
+     * in the action row rather than an empty slot. */
+    private void setButtonShown(Button button, boolean shown)
+    {
+        button.setVisible(shown);
+        button.setManaged(shown);
     }
 
     @FXML
     private void onStartGame(ActionEvent event)
     {
-        // TODO: hand off to the auth-server login flow once the client bootstrap is implemented.
-        log.info("Start Game clicked");
+        ClientSession session = ClientSessionManager.getInstance().getSession();
+
+        // The button is only shown once signed in (see showLoggedInUser), but re-check rather
+        // than trust the UI state - the client is launched with these credentials.
+        if(session == null || !session.isAuthenticated() || session.getUsername() == null)
+        {
+            log.warn("Start Game clicked while not signed in - ignoring.");
+            showAlert(Alert.AlertType.WARNING, "Not signed in", "Please log in before starting the game.");
+            return;
+        }
+
+        String clientPath = LauncherConfig.getClientPath();
+
+        try
+        {
+            GameClientLauncher.launch(clientPath, session.getUsername(), session.getPassword());
+
+            // Never log the password - see ClientSession#password.
+            log.info("Launched game client for '{}' from {}", session.getUsername(), clientPath);
+
+            // Get out of the way rather than exiting: the launcher is the only thing holding the
+            // AuthServer connection, and closing it would drop that mid-handoff.
+            ((Stage) rootPane.getScene().getWindow()).setIconified(true);
+        }
+        catch(IOException e)
+        {
+            log.error("Unable to launch the game client from '{}'", clientPath, e);
+            showAlert(Alert.AlertType.ERROR, "Could not start the game",
+                    e.getMessage() + "\n\nCheck [CLIENT] PATH in Config/Launcher/Launcher.ini.");
+        }
+    }
+
+    private void showAlert(Alert.AlertType type, String header, String message)
+    {
+        Alert alert = new Alert(type);
+        alert.initOwner(rootPane.getScene().getWindow());
+        alert.setTitle(LauncherConfig.getWindowTitle());
+        alert.setHeaderText(header);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     /**

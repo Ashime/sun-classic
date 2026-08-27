@@ -17,4 +17,21 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <build>
+        <plugins>
+            <!-- commons is a shared library with no main class, but the root pom declares
+                 spring-boot-maven-plugin in <build><plugins> (not <pluginManagement>), so
+                 every module inherits its repackage goal by default. Skip it here so
+                 `mvn install` produces a normal jar instead of failing with
+                 "Unable to find main class". -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

@@ -11,6 +11,7 @@ public interface Protocol
                 F = FieldServer
                 G = GameServer
                 L = Launcher
+                P = ProxyServer
                 S = ShopServer
                 U = User
                 W = WebServer
@@ -62,8 +63,7 @@ public interface Protocol
         packet encryption) -> A2L_ansVerifyVersion.
      */
     byte L2A_askUnknown1      = (byte) 0xFE;
-    // TODO: opcode unconfirmed - no example of this packet has been captured yet, this is a
-    // placeholder so the launcher-side shell has something to compile/dispatch against.
+    // TODO: opcode unconfirmed - no example of this packet has been captured yet, this is a placeholder so the launcher-side shell has something to compile/dispatch against.
     byte A2L_ansReady         = (byte) 0xFD;
     byte A2L_ansVerifyVersion = (byte) 0xFF;
 
@@ -116,4 +116,8 @@ public interface Protocol
     // ---------- Common Packets ----------
     byte S2S_askServerInfo = 0x01;
     byte S2S_ansServerInfo = 0x02;
+    byte S2S_askAuthUser   = 0x03;
+    byte S2S_ansAuthUser   = 0x04;
+    byte S2S_askCreateAccount = 0x05;
+    byte S2S_ansCreateAccount = 0x06;
 }

@@ -19,9 +19,10 @@ public class ClientSession
     private byte[] teaKey;
 
     /**
-     * Whether {@code teaKey} has been handed out and packet encryption should be considered
-     * active. {@link com.valiantgaming.commons.security.crypt.TEA} isn't implemented yet, so
-     * this only gates logging/intent for now - see {@code ClientPacketDecoder}/{@code Encoder}.
+     * Whether {@code teaKey} has been handed out. {@link com.valiantgaming.commons.security.crypt.TEA}
+     * is only used to decrypt the password field in {@code U2A_askAuthUser}, not whole
+     * packets, so this doesn't gate general packet decryption - see
+     * {@code ClientPacketDecoder}/{@code Encoder}'s class comments.
      */
     private boolean messageCryptEnabled;
 

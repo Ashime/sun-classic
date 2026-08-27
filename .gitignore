@@ -33,5 +33,25 @@ build/
 .vscode/
 
 ### TLS (locally generated dev CA/certs/keys - never commit) ###
+# Both cases listed explicitly: the directories on disk are "TLS", and these patterns only
+# match them by luck of core.ignorecase=true on Windows. On a case-sensitive checkout (Linux
+# CI, WSL) the lowercase forms alone would NOT match and the private keys would be committed.
 Config/tls/
 Config/*/tls/
+Config/TLS/
+Config/*/TLS/
+
+### Archives of Config/ - these bundle the TLS private keys and so bypass the rules above ###
+*.7z
+*.zip
+*.rar
+
+### Game client assets - ~7.9GB, far past what GitHub should hold; keep them out of history ###
+Data/
+
+### Runtime logs written next to each server ###
+Logs/
+**/Logs/
+
+### IntelliJ build artifacts (jars are built from source; no need to version them) ###
+out/

@@ -19,10 +19,10 @@ public class Profile
     @Column(name = "ProfileID")
     private int profileID;
 
-    @NotBlank
     @Column(name = "FirstName")
     private String firstName;
 
+    @NotBlank
     @Column(name = "LastName")
     private String lastName;
 
@@ -32,27 +32,21 @@ public class Profile
     @Column(name = "BirthDay")
     private short birthDay;
 
-    @NotBlank
     @Column(name = "SecurityQuestion1")
     private String securityQuestion1;
 
-    @NotBlank
     @Column(name = "Answer1")
     private String answer1;
 
-    @NotBlank
     @Column(name = "SecurityQuestion2")
     private String securityQuestion2;
 
-    @NotBlank
     @Column(name = "Answer2")
     private String answer2;
 
-    @NotBlank
     @Column(name = "SecurityQuestion3")
     private String securityQuestion3;
 
-    @NotBlank
     @Column(name = "Answer3")
     private String answer3;
 

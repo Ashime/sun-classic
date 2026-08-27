@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- UI only: no field validation and the submit button doesn't call anything yet - there's
-     no registration endpoint on auth-server/database-server to send this to. -->
+<!-- Submits to web-server's POST /api/register (see RegistrationController) once all fields
+     are filled in - see LauncherConfig's [WEB_SERVER] section for the host/port it targets. -->
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
@@ -16,37 +16,84 @@
             </Button>
         </HBox>
 
-        <VBox styleClass="reg-body" spacing="16">
-            <Label text="Create Account" styleClass="reg-title"/>
-            <Label text="Join SUN Classic and start your adventure." styleClass="reg-subtitle" wrapText="true"/>
+        <ScrollPane fitToWidth="true" styleClass="reg-scroll" hbarPolicy="NEVER" maxHeight="560">
+            <VBox styleClass="reg-body" spacing="16">
+                <Label text="Create Account" styleClass="reg-title"/>
+                <Label text="Join SUN Classic and start your adventure." styleClass="reg-subtitle" wrapText="true"/>
 
-            <VBox styleClass="field-group" spacing="6">
-                <Label text="Username" styleClass="field-label"/>
-                <TextField promptText="Enter username" styleClass="text-input"/>
-            </VBox>
+                <VBox styleClass="field-group" spacing="6">
+                    <HBox spacing="2" alignment="CENTER_LEFT">
+                        <Label text="Username" styleClass="field-label"/>
+                        <Label text="*" styleClass="required-marker"/>
+                    </HBox>
+                    <TextField fx:id="usernameField" promptText="Enter username" styleClass="text-input"/>
+                </VBox>
 
-            <VBox styleClass="field-group" spacing="6">
-                <Label text="Email" styleClass="field-label"/>
-                <TextField promptText="you@example.com" styleClass="text-input"/>
-            </VBox>
+                <VBox styleClass="field-group" spacing="6">
+                    <HBox spacing="2" alignment="CENTER_LEFT">
+                        <Label text="Email" styleClass="field-label"/>
+                        <Label text="*" styleClass="required-marker"/>
+                    </HBox>
+                    <TextField fx:id="emailField" promptText="you@example.com" styleClass="text-input"/>
+                </VBox>
 
-            <VBox styleClass="field-group" spacing="6">
-                <Label text="Date of Birth" styleClass="field-label"/>
                 <HBox spacing="10">
-                    <ComboBox fx:id="dobMonth" promptText="Month" styleClass="combo-input" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                    <ComboBox fx:id="dobDay" promptText="Day" styleClass="combo-input" prefWidth="96"/>
+                    <VBox styleClass="field-group" spacing="6" HBox.hgrow="ALWAYS">
+                        <Label text="First Name" styleClass="field-label"/>
+                        <TextField fx:id="firstNameField" promptText="First name" styleClass="text-input" maxWidth="Infinity"/>
+                    </VBox>
+                    <VBox styleClass="field-group" spacing="6" HBox.hgrow="ALWAYS">
+                        <HBox spacing="2" alignment="CENTER_LEFT">
+                            <Label text="Last Name" styleClass="field-label"/>
+                            <Label text="*" styleClass="required-marker"/>
+                        </HBox>
+                        <TextField fx:id="lastNameField" promptText="Last name" styleClass="text-input" maxWidth="Infinity"/>
+                    </VBox>
                 </HBox>
+
+                <VBox styleClass="field-group" spacing="6">
+                    <HBox spacing="2" alignment="CENTER_LEFT">
+                        <Label text="Date of Birth" styleClass="field-label"/>
+                        <Label text="*" styleClass="required-marker"/>
+                    </HBox>
+                    <HBox spacing="10">
+                        <ComboBox fx:id="dobMonth" promptText="Month" styleClass="combo-input" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <ComboBox fx:id="dobDay" promptText="Day" styleClass="combo-input" prefWidth="96"/>
+                    </HBox>
+                </VBox>
+
+                <VBox styleClass="field-group" spacing="6">
+                    <HBox spacing="2" alignment="CENTER_LEFT">
+                        <Label text="Password" styleClass="field-label"/>
+                        <Label text="*" styleClass="required-marker"/>
+                    </HBox>
+                    <PasswordField fx:id="passwordField" promptText="Enter password" styleClass="text-input"/>
+                </VBox>
+
+                <Label text="Security Questions" styleClass="field-label"/>
+
+                <HBox spacing="10">
+                    <TextField fx:id="securityQuestion1Field" promptText="Security question 1" styleClass="text-input" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    <TextField fx:id="securityAnswer1Field" promptText="Answer" styleClass="text-input" prefWidth="120"/>
+                </HBox>
+
+                <HBox spacing="10">
+                    <TextField fx:id="securityQuestion2Field" promptText="Security question 2" styleClass="text-input" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    <TextField fx:id="securityAnswer2Field" promptText="Answer" styleClass="text-input" prefWidth="120"/>
+                </HBox>
+
+                <HBox spacing="10">
+                    <TextField fx:id="securityQuestion3Field" promptText="Security question 3" styleClass="text-input" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    <TextField fx:id="securityAnswer3Field" promptText="Answer" styleClass="text-input" prefWidth="120"/>
+                </HBox>
+
+                <Label fx:id="statusLabel" styleClass="form-status" wrapText="true" managed="false" visible="false"/>
+
+                <Region prefHeight="4"/>
+
+                <Button fx:id="submitButton" text="CREATE ACCOUNT" styleClass="btn-primary" maxWidth="Infinity" onAction="#onSubmit"/>
+                <Button text="CANCEL" styleClass="btn-outline" maxWidth="Infinity" onAction="#onClose"/>
             </VBox>
-
-            <VBox styleClass="field-group" spacing="6">
-                <Label text="Password" styleClass="field-label"/>
-                <PasswordField promptText="Enter password" styleClass="text-input"/>
-            </VBox>
-
-            <Region prefHeight="4"/>
-
-            <Button text="CREATE ACCOUNT" styleClass="btn-primary" maxWidth="Infinity" onAction="#onSubmit"/>
-            <Button text="CANCEL" styleClass="btn-outline" maxWidth="Infinity" onAction="#onClose"/>
-        </VBox>
+        </ScrollPane>
     </VBox>
 </StackPane>

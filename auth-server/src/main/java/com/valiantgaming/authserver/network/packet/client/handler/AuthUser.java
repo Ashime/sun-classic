@@ -1,29 +1,38 @@
 package com.valiantgaming.authserver.network.packet.client.handler;
 
+import com.valiantgaming.commons.security.crypt.TEA;
+import com.valiantgaming.commons.utility.Utility;
+
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
- * Validates {@code U2A_askAuthUser}'s username/password against the account database.
+ * Decodes {@code U2A_askAuthUser}'s username/password. Byte offsets below match the layout
+ * captured in {@code Protocol}'s {@code U2A_askAuthUser} comment - though that capture's own
+ * encrypted-password field looks longer (~35 bytes, and printable-ASCII-shaped) than the 16 raw
+ * bytes {@link TEA} decrypts, so this offset/length pairing is still unverified against a real
+ * capture.
  *
- * <p>Byte offsets below match the layout captured in {@code Protocol}'s
- * {@code U2A_askAuthUser} comment. Still a stub: real validation needs (1)
- * {@link com.valiantgaming.commons.security.crypt.TEA} to decrypt {@code password} with
- * {@code key} (TEA is currently an empty class) and (2) an S2S packet to database-server to
- * check the decrypted credentials, since auth-server never queries SQL Server directly (see
- * CLAUDE.md) - no such packet exists yet, nor does an {@code AccountDAO} lookup-by-credentials
- * method. {@code AuthServerConfig.isTrustedDevices()}/{@code getHmacTimestampOffset()} are the
- * real config this should read once the trusted-devices check is implemented, replacing the
- * {@code ipAddress} parameter's previous (unimplemented) role.
+ * <p>Credential validation itself happens on database-server via the {@code AuthenticateAccount}
+ * stored procedure (see {@code AccountDAO.authenticateAccount}), reached over a
+ * {@code S2S_askAuthUser}/{@code S2S_ansAuthUser} round trip - see {@code ClientPacketHandler}'s
+ * {@code U2A_askAuthUser} case and {@code PendingAuthRequests} for how that asynchronous reply
+ * is correlated back to this client's own channel.
  */
 public class AuthUser
 {
-    public static boolean authUserAndPassword(byte[] input, byte[] key, String ipAddress)
-    {
-        byte[] username = Arrays.copyOfRange(input, 6, 56);
-        byte[] password = Arrays.copyOfRange(input, 57, 80);
+    public record Credentials(String username, String password) {}
 
-        // TODO: decrypt `password` with TEA using `key`, then ask database-server (via a new
-        // S2S packet) to validate the decrypted username/password.
-        return false;
+    public static Credentials decode(byte[] input, byte[] key)
+    {
+        byte[] usernameBytes = Utility.cutTail(Arrays.copyOfRange(input, 6, 56));
+        byte[] passwordBytes = Arrays.copyOfRange(input, 57, 80);
+
+        byte[] decryptedPassword = Utility.cutTail(TEA.passwordDecode(passwordBytes, key));
+
+        return new Credentials(
+                new String(usernameBytes, StandardCharsets.UTF_8),
+                new String(decryptedPassword, StandardCharsets.UTF_8)
+        );
     }
 }

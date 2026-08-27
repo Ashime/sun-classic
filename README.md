@@ -1,4 +1,4 @@
-![SunClassicLogo](src/main/resources/SunClassic-Logo-Transparent.png)
+![SunClassicLogo](src/main/resources/Logo1.png)
 # SUN Classic
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/Ashime/sun-classic/maven.yml)
 [![CodeQL](https://github.com/Ashime/sun-classic/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/Ashime/sun-classic/actions/workflows/github-code-scanning/codeql)

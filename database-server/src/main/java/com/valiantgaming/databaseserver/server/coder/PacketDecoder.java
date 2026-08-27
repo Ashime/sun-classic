@@ -35,8 +35,6 @@ public class PacketDecoder extends ChannelInboundHandlerAdapter
 //            }
         }
 
-        // Flip the size bytes around.
-        Utility.flip(packet, 0, 1);
         // Split the size header off.
         header = Utility.split(packet, 0, 2);
         // Split message from size header

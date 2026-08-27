@@ -130,5 +130,15 @@
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+        <!-- =============== ARGON2 =============== -->
+        <!-- Spring Security's Argon2PasswordEncoder (used by ARGON2 in commons) delegates to BouncyCastle's
+             Argon2 implementation, but declares it as an optional dependency - without this, hashPassword/
+             validatePassword throw ClassNotFoundException at runtime the first time they're called. -->
+        <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.84</version>
+        </dependency>
     </dependencies>
 </project>

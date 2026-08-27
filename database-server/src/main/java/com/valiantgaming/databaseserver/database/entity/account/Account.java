@@ -13,6 +13,27 @@ import java.time.LocalDateTime;
 ({
     @NamedStoredProcedureQuery
     (
+        name = "AuthenticateAccount",
+        procedureName = "AuthenticateAccount",
+        resultClasses = String.class,
+        parameters =
+        {
+            @StoredProcedureParameter
+            (
+                    name = "username",
+                    type = String.class,
+                    mode = ParameterMode.IN
+            ),
+            @StoredProcedureParameter
+            (
+                    name = "passwordMatched",
+                    type = boolean.class,
+                    mode = ParameterMode.IN
+            ),
+        }
+    ),
+    @NamedStoredProcedureQuery
+    (
         name = "CreateAccount",
         procedureName = "CreateAccount",
         resultClasses = String.class,
@@ -27,12 +48,6 @@ import java.time.LocalDateTime;
             @StoredProcedureParameter
             (
                 name = "password",
-                type = String.class,
-                mode = ParameterMode.IN
-            ),
-            @StoredProcedureParameter
-            (
-                name = "salt",
                 type = String.class,
                 mode = ParameterMode.IN
             ),
@@ -142,6 +157,21 @@ import java.time.LocalDateTime;
     ),
     @NamedStoredProcedureQuery
     (
+        name = "GetAccountCredentials",
+        procedureName = "GetAccountCredentials",
+        resultClasses = Account.class,
+        parameters =
+        {
+            @StoredProcedureParameter
+            (
+                name = "username",
+                type = String.class,
+                mode = ParameterMode.IN
+            )
+        }
+    ),
+    @NamedStoredProcedureQuery
+    (
         name = "GetDeactivatedAccounts",
         procedureName = "GetDeactivatedAccounts",
         resultClasses = Account.class
@@ -202,13 +232,6 @@ public class Account
     private String lastPassword;
 
     @NotBlank
-    @Column(name = "Salt")
-    private String salt;
-
-    @Column(name = "LastSalt")
-    private String lastSalt;
-
-    @NotBlank
     @Column(name = "Email")
     private String email;
 
@@ -267,8 +290,6 @@ public class Account
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", lastPassword='" + lastPassword + '\'' +
-                ", salt='" + salt + '\'' +
-                ", lastSalt='" + lastSalt + '\'' +
                 ", email='" + email + '\'' +
                 ", emailVerified=" + emailVerified +
                 ", loginAttempts=" + loginAttempts +
