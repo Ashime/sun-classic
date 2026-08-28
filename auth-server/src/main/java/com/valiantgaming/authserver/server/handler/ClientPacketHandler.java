@@ -1,5 +1,6 @@
 package com.valiantgaming.authserver.server.handler;
 
+import com.valiantgaming.authserver.config.AuthServerConfig;
 import com.valiantgaming.authserver.network.packet.client.*;
 import com.valiantgaming.authserver.network.packet.client.handler.AuthUser;
 import com.valiantgaming.authserver.network.packet.client.handler.SrvSelect;
@@ -81,7 +82,22 @@ public class ClientPacketHandler extends ChannelDuplexHandler
                     byte[] payload = VerifyUser.decode(message);
                     log.info("Received verify request, payload: {}", Utility.byteArrayToHexString(payload));
 
-                    ctx.writeAndFlush(new AnsVerify().createPacket());
+                    if(AuthServerConfig.isAnsVerifyProbe())
+                    {
+                        // Diagnostic mode: serve a different candidate per connection to find the
+                        // real response format. See AnsVerifyProbe.
+                        AnsVerifyProbe.Attempt attempt = AnsVerifyProbe.next(payload);
+                        log.info("PROBE serving ansVerify candidate {} -> {}", attempt.label(), attempt.hex());
+
+                        session.setAnsVerifyCandidate(attempt.label());
+                        session.setAnsVerifySentAt(System.nanoTime());
+
+                        ctx.writeAndFlush(attempt.packet());
+                    }
+                    else
+                    {
+                        ctx.writeAndFlush(AnsVerify.createPacket(payload));
+                    }
                     break;
                 }
                 case Protocol.U2A_askAuthUser:
@@ -195,6 +211,17 @@ public class ClientPacketHandler extends ChannelDuplexHandler
     public void channelInactive(ChannelHandlerContext ctx)
     {
         log.info("Client at {} disconnected.", ctx.channel().remoteAddress());
+
+        // Read the session before removing it - how long the client tolerated our ansVerify is
+        // the probe's actual measurement, and it is only knowable at close time.
+        ClientSession session = ClientSessionManager.getInstance().getSession(ctx);
+
+        if(session != null && session.getAnsVerifyCandidate() != null)
+        {
+            long elapsedMillis = (System.nanoTime() - session.getAnsVerifySentAt()) / 1_000_000L;
+            log.info("PROBE result: candidate {} -> disconnected after {}ms", session.getAnsVerifyCandidate(), elapsedMillis);
+        }
+
         ClientSessionManager.getInstance().removeSession(ctx);
     }
 
@@ -203,8 +230,10 @@ public class ClientPacketHandler extends ChannelDuplexHandler
     {
         if(cause instanceof IOException)
         {
-            // Expected: the client's process died or the network dropped - not an application bug.
-            log.warn("Connection to {} was reset: {}", ctx.channel().remoteAddress(), cause.getMessage());
+            // Expected: the client's process died, the network dropped, or (most commonly) a
+            // health-check probe closed the socket without reading what we'd just written
+            // (see ServerHealthCheck.isReachable) - not an application bug, so DEBUG rather than WARN.
+            log.debug("Connection to {} was reset: {}", ctx.channel().remoteAddress(), cause.getMessage());
         }
         else
         {

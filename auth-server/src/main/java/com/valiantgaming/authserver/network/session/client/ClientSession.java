@@ -31,4 +31,17 @@ public class ClientSession
 
     /** Username this session authenticated as, once {@link #authenticated} is true. */
     private String username;
+
+    /**
+     * Label of the {@code A2U_ansVerify} candidate served on this connection, or null when the
+     * probe is off. Diagnostic only - see {@code AnsVerifyProbe}.
+     */
+    private String ansVerifyCandidate;
+
+    /**
+     * {@link System#nanoTime()} at which {@link #ansVerifyCandidate} was written, so
+     * {@code ClientPacketHandler#channelInactive} can report how long the client tolerated that
+     * reply before closing. Nano time because this is a duration, not a wall-clock instant.
+     */
+    private long ansVerifySentAt;
 }
