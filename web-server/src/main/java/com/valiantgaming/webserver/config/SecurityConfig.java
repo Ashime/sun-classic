@@ -21,7 +21,6 @@ public class SecurityConfig
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception
     {
         http
-            .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 // Spring MVC's validation-error handling (e.g. a failed @Valid on RegisterAccountRequest)
                 // re-dispatches internally with DispatcherType.ERROR - without this, that re-dispatch gets
