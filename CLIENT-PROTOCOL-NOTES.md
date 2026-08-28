@@ -261,3 +261,12 @@ which already prevents the live login server being used.
 - `LaunchGameProbe.java` / `ClientLaunchProbe.java` — drive `GameClientLauncher` headlessly.
 - `phase-*.ps1` — elevated `wpktool` wrappers: verified backup, size-padding merge with
   round-trip hash verification, and verified restore.
+- `wpk-extract/LOGIN.INI.orig` — pristine copy of the 323-byte original, MD5
+  `6b70d1c9cd19e8edbfc9896d280da0c5`.
+
+**Reference hashes** for the client install, so a modified file can always be spotted:
+
+| artifact | hash |
+|---|---|
+| pristine `System.wpk` | SHA256 `7DE3B13423DB0EE72335F589713217C36F08F7137542FC5487C1A0D741A0A76C` |
+| pristine `LOGIN.INI` (323 bytes) | MD5 `6b70d1c9cd19e8edbfc9896d280da0c5` |
