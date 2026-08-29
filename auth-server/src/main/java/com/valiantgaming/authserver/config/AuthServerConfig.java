@@ -32,6 +32,11 @@ public class AuthServerConfig
     @Getter
     private static boolean trustedDevices;
 
+    // [PROBE]
+    /** Diagnostic only - see {@code AnsVerifyProbe}. Off unless the ini says otherwise. */
+    @Getter
+    private static boolean ansVerifyProbe;
+
     // [TLS]
     @Getter
     private static String tlsCertPath;
@@ -93,6 +98,12 @@ public class AuthServerConfig
         // [SECURITY]
         hmacTimestampOffset = ini.get("SECURITY", "HMAC_TIMESTAMP_OFFSET", int.class);
         trustedDevices = ini.get("SECURITY", "TRUSTED_DEVICES", boolean.class);
+
+        // [PROBE]
+        // Read as the boxed type and defaulted, so an ini predating this section still starts
+        // rather than NPE-ing on unboxing the way the reads above would.
+        Boolean probe = ini.get("PROBE", "ANS_VERIFY_PROBE", Boolean.class);
+        ansVerifyProbe = probe != null && probe;
 
         // [DATABASE_SERVER]
         dbServerIp = ini.get("DATABASE_SERVER", "IP", String.class);
