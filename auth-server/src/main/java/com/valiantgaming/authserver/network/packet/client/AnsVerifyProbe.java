@@ -3,7 +3,11 @@ package com.valiantgaming.authserver.network.packet.client;
 import com.valiantgaming.commons.network.packet.Category;
 import com.valiantgaming.commons.network.packet.Protocol;
 import com.valiantgaming.commons.utility.Utility;
+import lombok.extern.log4j.Log4j2;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,29 +36,54 @@ import java.util.function.UnaryOperator;
  * 14.8s and 5.2s closes across runs, so it cannot rank candidates (see §3.2). The delay is logged
  * only as weak context.
  *
- * <p>The rotation cursor is static and resets when auth-server restarts, so a restart puts the
- * next launch back on candidate 1.
+ * <p><b>The rotation cursor survives restarts.</b> It is stored in {@link #STATE_FILE}, so stopping
+ * auth-server between client launches - which happens constantly, since Windows locks a running jar
+ * and every rebuild needs it stopped - no longer replays candidates already known to have failed.
+ * A launch costs roughly 45 seconds, so replaying even one is worth avoiding. Delete that file to
+ * restart the rotation from {@link #FIRST_UNTESTED_INDEX}, or write a zero-based index into it to
+ * jump straight to a specific candidate.
  */
+@Log4j2
 public final class AnsVerifyProbe
 {
     /** {@code U2A_askVerify} is {@code 07 01 01} then a 32-byte null-padded host field. */
     private static final int HOST_OFFSET = 3;
     private static final int HOST_LENGTH = 32;
 
+    /**
+     * Where the rotation cursor is kept between runs, as a single zero-based index in plain text.
+     * Sits beside the ini that turns the probe on, so both halves of the probe's state are found in
+     * the same place. This is runtime state rather than configuration, so it is gitignored.
+     */
+    private static final Path STATE_FILE = Path.of("Config/AuthServer/AnsVerifyProbe.state");
+
+    /**
+     * Where a fresh rotation begins - zero-based, so index 3 is candidate 4 ({@code 0000}).
+     *
+     * <p>Candidates 1-3 ({@code 00} baseline, {@code 070101}+host mirror, and empty body) were each
+     * served to a live client on 2026-09-01 and every one was closed on without a single inbound
+     * byte (§3.4). Starting a fresh rotation at candidate 1 would spend three client launches
+     * re-confirming that, so it starts past them instead. Set this to 0 to re-run the controls.
+     */
+    private static final int FIRST_UNTESTED_INDEX = 3;
+
     private record Candidate(String label, UnaryOperator<byte[]> body) {}
 
     /**
      * Ordered candidate bodies (everything after category+protocol). The cursor wraps, so the list
      * can grow freely - it is walked one entry per client launch either way.
+     *
+     * <p>Append new candidates rather than inserting them: {@link #STATE_FILE} holds a positional
+     * index, so reordering this list silently repoints a saved cursor at a different candidate.
      */
     private static final List<Candidate> CANDIDATES = List.of(
-            // The two already measured, kept first as controls to confirm the harness reproduces
-            // §3's numbers before trusting any new row.
+            // The three already measured, kept first as controls to confirm the harness reproduces
+            // §3's numbers before trusting any new row. FIRST_UNTESTED_INDEX skips past them.
             new Candidate("00 (baseline, 3-byte)", payload -> new byte[] { 0x00 }),
             new Candidate("070101+host (mirror)", AnsVerifyProbe::mirror),
+            new Candidate("empty body", payload -> new byte[0]),
 
             // Untested candidates from §3.
-            new Candidate("empty body", payload -> new byte[0]),
             new Candidate("0000", payload -> new byte[] { 0x00, 0x00 }),
             new Candidate("00000000", payload -> new byte[4]),
             new Candidate("0000000000000000", payload -> new byte[8]),
@@ -64,7 +93,8 @@ public final class AnsVerifyProbe
             new Candidate("0001+host", payload -> concat(new byte[] { 0x00, 0x01 }, hostField(payload)))
     );
 
-    private static final AtomicInteger cursor = new AtomicInteger();
+    /** Always holds a valid index into {@link #CANDIDATES} - see {@link #readCursor()}. */
+    private static final AtomicInteger cursor = new AtomicInteger(readCursor());
 
     private AnsVerifyProbe()
     {
@@ -81,15 +111,18 @@ public final class AnsVerifyProbe
 
     /**
      * Builds the next candidate in the rotation. Advances once per call, so each connection that
-     * reaches {@code U2A_askVerify} gets the following entry.
+     * reaches {@code U2A_askVerify} gets the following entry, and persists the new position so a
+     * restart resumes where this left off rather than replaying the rotation.
      *
      * @param askVerifyPayload the request body (after category+protocol), used by candidates that
      *                         echo the client's host field back
      */
     public static Attempt next(byte[] askVerifyPayload)
     {
-        int index = Math.floorMod(cursor.getAndIncrement(), CANDIDATES.size());
+        int index = cursor.getAndUpdate(current -> Math.floorMod(current + 1, CANDIDATES.size()));
         Candidate candidate = CANDIDATES.get(index);
+
+        writeCursor(Math.floorMod(index + 1, CANDIDATES.size()));
 
         byte[] body = candidate.body().apply(askVerifyPayload);
         byte[] packet = new byte[2 + body.length];
@@ -98,6 +131,65 @@ public final class AnsVerifyProbe
         System.arraycopy(body, 0, packet, 2, body.length);
 
         return new Attempt("[" + (index + 1) + "/" + CANDIDATES.size() + "] " + candidate.label(), packet);
+    }
+
+    /**
+     * The saved cursor, or {@link #FIRST_UNTESTED_INDEX} when there is nothing usable to read.
+     * A missing, empty, unparseable or unreadable file all mean the same thing here - no position
+     * worth resuming - and none of them should stop auth-server starting over a diagnostic.
+     */
+    private static int readCursor()
+    {
+        try
+        {
+            if(Files.exists(STATE_FILE))
+            {
+                String saved = Files.readString(STATE_FILE).trim();
+
+                if(!saved.isEmpty())
+                {
+                    // Wrapped rather than rejected, so that shrinking CANDIDATES cannot leave a
+                    // saved index pointing past the end of the list.
+                    int index = Math.floorMod(Integer.parseInt(saved), CANDIDATES.size());
+                    log.info("Resuming ansVerify probe at candidate [{}/{}] from {}", index + 1, CANDIDATES.size(), STATE_FILE);
+
+                    return index;
+                }
+            }
+        }
+        catch(IOException | NumberFormatException e)
+        {
+            log.warn("Could not read the ansVerify probe cursor from {} ({}) - starting at candidate [{}/{}].",
+                    STATE_FILE, e.getMessage(), FIRST_UNTESTED_INDEX + 1, CANDIDATES.size());
+
+            return FIRST_UNTESTED_INDEX;
+        }
+
+        log.info("No saved ansVerify probe cursor - starting at candidate [{}/{}].", FIRST_UNTESTED_INDEX + 1, CANDIDATES.size());
+
+        return FIRST_UNTESTED_INDEX;
+    }
+
+    /**
+     * Records where the rotation should resume. A failed write is logged and swallowed: losing the
+     * position costs one repeated client launch, which is not worth failing a client's verify over.
+     */
+    private static void writeCursor(int nextIndex)
+    {
+        try
+        {
+            Path parent = STATE_FILE.getParent();
+
+            if(parent != null)
+                Files.createDirectories(parent);
+
+            Files.writeString(STATE_FILE, Integer.toString(nextIndex));
+        }
+        catch(IOException e)
+        {
+            log.warn("Could not persist the ansVerify probe cursor to {} ({}) - a restart will replay from candidate [{}/{}].",
+                    STATE_FILE, e.getMessage(), FIRST_UNTESTED_INDEX + 1, CANDIDATES.size());
+        }
     }
 
     /** The client's 32-byte host field, or empty if the request was shorter than expected. */

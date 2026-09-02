@@ -117,20 +117,40 @@ reply — untested hypothesis.
 ### 3.4 Candidates
 
 Tested, no inbound byte and no progression:
-- `33 02 00` (3-byte) — the current non-probe default
+- `33 02 00` (3-byte) — the current non-probe default. Re-confirmed 2026-09-01 (probe candidate 1).
 - `33 02 01` — hard reject
-- `33 02 07 01 01` + 32-byte host echo (mirror)
+- `33 02 07 01 01` + 32-byte host echo (mirror). Re-confirmed 2026-09-01 (probe candidate 2).
+- `33 02` — empty body. Tested 2026-09-01 (probe candidate 3).
 
-Untested, already wired into the probe rotation (§8):
-`empty body`, `0000`, `00000000`, `0000000000000000`, `01`, `070101`, `00`+host, `0001`+host.
+Also tested 2026-09-01, all with the same signature (no inbound byte, no progression):
+`0000` (cand 4), `00000000` (cand 5), `0000000000000000` (cand 6), `01` (cand 7).
+
+Untested, remaining in the rotation (§8): `070101` (8), `00`+host (9), `0001`+host (10).
+
+**The result-byte polarity question is now settled — it is not the issue.** The worry was that
+`0x00` = success came from our own `AnsAuthUser` rather than from the client. Candidate 7 tested
+`33 02 01` as a *success* reply and it failed exactly like `33 02 00`. Neither polarity is
+accepted, so the result byte is not what the client is rejecting.
+
+**Seven structurally different bodies (0, 1, 2, 4, 8 and 35 bytes, both polarities) have now all
+failed identically.** Combined with §9.4 — where full Ghidra analysis found no opcode switch and
+no literal `0x33`/`0x02` comparison anywhere — the body shape is very unlikely to be the variable
+that matters. Continuing to sweep it is low-value; the dynamic approach in §9.4 is the way
+forward.
 
 ---
 
 ## 4. `System.wpk` is editable — this is where the server address lives
 
-`System\LOGIN.INI` (323 bytes at `0x0C2B1018` inside `<client>\System\System.wpk`) is
-**plaintext**, though the archive's header and its other payloads are obfuscated — a byte-scan of
-all 195 MB for `LOGIN_SERVER_TYPE` / `LOGIN.INI` finds nothing, so `wpktool` is the only way in.
+`System\LOGIN.INI` is 323 bytes at `0x0C2B1018` inside `<client>\System\System.wpk` (confirmed by
+`wpktool -l`). A byte-scan of all 195 MB for `LOGIN_SERVER_TYPE` / `LOGIN.INI` finds nothing.
+
+**It is NOT plaintext in the archive — it is XOR `0x69`.** An earlier revision of this section said
+plaintext; that was wrong, and it matters because the raw bytes at that offset MD5 to
+`437cd1c38252473fe19f499c1cb41c1c`, not the `6b70d1c9…` recorded below. `wpktool` de-obfuscates on
+extract and re-obfuscates on merge, so **`wpktool` works in decoded/plaintext space** and the
+`6b70d1c9…` hash refers to the decoded form. (`0x0D^0x69='d'`, `0x0A^0x69='c'`, `0x20^0x69='I'`,
+`0x3D^0x69='T'` — the giveaway is `dc` for CRLF and `ITI` for ` = ` in a raw dump.)
 
 Original (and current) contents:
 
@@ -152,6 +172,11 @@ Tooling: `<client>\System\wpktool.exe` (**requires elevation**).
 - `-m` patches the slot **in place**, so the replacement must be **exactly 323 bytes**. Pad
   shorter content with a trailing `;` comment line — INI-inert, and the file already uses a
   `;;;;;` divider so it matches the existing style.
+- **`-m` also requires the replacement's first 4 bytes to match the existing entry's.** Otherwise
+  it refuses with a Shift-JIS error that renders as mojibake
+  (`Éµô¬âfü[â^4âoâCâgé¬òsêΩÆv` = `先頭データ4バイトが不一致`, "the first 4 bytes of data do not
+  match") and leaves the archive untouched. The original starts `; CR LF ;` (`3B 0D 0A 3B`), so
+  **begin any replacement with a `;` comment line**.
 - Verify a merge by extracting the entry straight back out and comparing hashes. Always back up
   `System.wpk` first (195 MB); a verified `System.wpk.bak` makes every experiment cheap to undo.
 - The Korean comments are **CP949**, not UTF-8. Edit at byte level (or via Latin-1 round-trip,
@@ -165,11 +190,58 @@ Tooling: `<client>\System\wpktool.exe` (**requires elevation**).
 | `TYPE = 1`, `IP_HEAD = 127.0.0.1`, no `TAIL`, `NUM` removed | merged and verified; not tested against a client before revert |
 | `TYPE = 1`, `IP_HEAD = 127.0.0.1`, `NUM = 1` restored | merged and verified; not tested against a client before revert |
 
-**Unresolved:** whether the client can be given a bare IP at all. If `HEAD + index + "." + TAIL`
-always inserts the index and dot, `IP_HEAD = 127.0.0.1` composes to `127.0.0.11.` — invalid.
-Whether `LOGIN_SERVER_TYPE = 1` selects a different composition rule was never actually put in
-front of a client. The hosts-entry route (§5) works and is the known-good configuration, so this
-is a cleanup nicety, not a blocker.
+### RESOLVED 2026-09-01 — a direct IP works, and this is now the active configuration
+
+`LOGIN_SERVER_TYPE = 1` **does** select a different address scheme, and it works against a live
+client. Decompiling `CLoginGameParam::Load` (`FUN_004f50b0`) gives the exact key→field mapping:
+
+| ini key | default | field | used when |
+|---|---|---|---|
+| `LOGIN_SERVER_IP` | `10.1.28.143` | `+0x458` (string) | **`TYPE != 2`** |
+| `LOGIN_SERVER_PORT` | `0x2774` (10100) | `+0x470` | **`TYPE != 2`** |
+| `LOGIN_SERVER_TYPE` | `0` | `+0x474` | always |
+| `SERVICE_LOGIN_SERVER_IP_HEAD` | `connect` | string | `TYPE == 2` |
+| `SERVICE_LOGIN_SERVER_IP_TAIL` | `sunonline.co.kr` | string | `TYPE == 2` |
+| `SERVICE_LOGIN_SERVER_PORT` | `0xad75` (44405) | `+0x4b0` | `TYPE == 2` |
+| `SERVICE_LOGIN_SERVER_NUM` | `2` | `+0x4b4` | `TYPE == 2` |
+| `SERVICE_LOGIN_TRY_COUNTS` | `10` | `+0x4b8` | — |
+
+**Why §4's earlier attempts could never have worked:** they set `IP_HEAD = 127.0.0.1`, but
+`TYPE = 1` ignores `IP_HEAD` entirely and reads `LOGIN_SERVER_IP` — which was absent from the
+file, so the client fell back to the built-in default `10.1.28.143`. The right keys were simply
+never present.
+
+The merged 323-byte `LOGIN.INI` now in `System.wpk`:
+
+```ini
+;
+;
+[PARAM]
+LOGIN_SERVER_TYPE = 1
+LOGIN_SERVER_IP = 127.0.0.1
+LOGIN_SERVER_PORT = 44405
+SERVICE_LOGIN_SERVER_NUM = 1
+SERVICE_LOGIN_SERVER_PORT = 44405
+SERVICE_LOGIN_SERVER_IP_HEAD = connected
+SERVICE_LOGIN_SERVER_IP_TAIL = sunclassic.webzen.co.kr
+SERVICE_LOGIN_TRY_COUNTS = 10
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+```
+
+**Proof it took effect:** `U2A_askVerify`'s 32-byte host field now carries `127.0.0.1`, not
+`connected1.sunc`:
+
+```
+33 01 | 07 01 01 | 31 32 37 2E 30 2E 30 2E 31 | 00 × 23      ("127.0.0.1")
+```
+
+**Consequence: the hosts entry in §5 is no longer required.** The client dials an IP literal, so
+there is no DNS lookup to intercept. Leaving the entry in place is harmless, but it can now be
+removed — which also removes the only thing still pointing the client at Webzen's real hostname.
+
+Hashes: pristine `System.wpk` SHA256 `7DE3B134…A76C`; with this `LOGIN.INI`,
+`D989FFE45C10B6635AD512B7E2B5F9E832131CFDD895CFC15DA27A7736980604` (size unchanged,
+204,564,609). `System.wpk.bak` is verified pristine — restore from it to revert.
 
 Also inside: `System\CLIENT_INFO.INI` → `VERSION = 2.6.0.1`, and `System\PROGRAM.INI`.
 
@@ -181,7 +253,7 @@ These live on the machine, not in git.
 
 | change | status | purpose / undo |
 |---|---|---|
-| **hosts entry** `127.0.0.1 connected1.sunclassic.webzen.co.kr` | **active, required** | routes the client's login host to local auth-server. Undo: delete the marked lines in `C:\Windows\System32\drivers\etc\hosts` (admin), then `ipconfig /flushdns` |
+| **hosts entry** `127.0.0.1 connected1.sunclassic.webzen.co.kr` | **REMOVED 2026-09-01 — no longer needed** | Superseded by `LOGIN_SERVER_TYPE = 1` + `LOGIN_SERVER_IP = 127.0.0.1` (§4), which makes the client dial an IP literal with no DNS lookup to intercept. Verified: with the entry gone the client still connects to `127.0.0.1:44405` and its `askVerify` carries `127.0.0.1`. `connected1.sunclassic.webzen.co.kr` now resolves normally to `125.141.214.85` again. Pre-removal backup: `Tools\Client Analysis\wpk-work\hosts.backup-20260901-222313`. |
 | **Firewall**: 2 rules blocking `Sungame.exe` / `SUN.exe` outbound to `125.141.214.0/24` | **REMOVED — do not re-add**, see §6 | was intended to stop the client reaching Webzen's live servers |
 | **SQL Server grants** on `sun-classic` for login `SunClassic` | active, required | `AuthenticateAccount`, `GetAccountCredentials`, `GetDeactivatedAccounts` had no EXECUTE. Undo: `REVOKE EXECUTE ON OBJECT::dbo.<proc> FROM SunClassic` |
 
@@ -250,8 +322,14 @@ which already prevents the live login server being used.
   `AuthServer.ini`; **leave `FALSE` for normal operation**, since it deliberately sends replies
   known to be wrong. Read results by pairing the `PROBE serving ...` and `PROBE result: ...`
   lines. Per §3.3 it advances one candidate per client launch, and per §3.2 judge the result on
-  whether any inbound byte arrives, not on the timing. The cursor resets when auth-server
-  restarts.
+  whether any inbound byte arrives, not on the timing.
+
+  The cursor **persists across restarts** in `Config/AuthServer/AnsVerifyProbe.state` (gitignored,
+  a single zero-based index). This matters because Windows locks a running jar, so every rebuild
+  forces a restart, and each replayed candidate costs a full ~45s client launch. A fresh cursor
+  starts at **candidate 4** — candidates 1–3 have all been served to a live client and failed
+  (§3.4). Delete the file to restart the rotation, or write an index into it to jump to a specific
+  candidate. The cursor is positional, so **append** to `CANDIDATES` rather than inserting into it.
 
 **Session scratchpad only (not in the repo, worth porting if this continues):**
 
@@ -270,3 +348,226 @@ which already prevents the live login server being used.
 |---|---|
 | pristine `System.wpk` | SHA256 `7DE3B13423DB0EE72335F589713217C36F08F7137542FC5487C1A0D741A0A76C` |
 | pristine `LOGIN.INI` (323 bytes) | MD5 `6b70d1c9cd19e8edbfc9896d280da0c5` |
+
+---
+
+## 9. Client reverse engineering — 2026-09-01
+
+### 9.1 `Sungame.exe` is MPRESS-packed; dump it from the live process
+
+Static analysis of `Sungame.exe` is impossible as shipped. Its sections are `.MPRESS1` /
+`.MPRESS2` / `.rsrc`, and `.MPRESS1` has entropy **8.000** (the maximum) — the code is compressed.
+The import table carries exactly one function per DLL (`WS2_32` → ordinal 19 = `send`); the real
+IAT is rebuilt at runtime by the packer stub.
+
+`SUN.exe` is *not* packed and does import full winsock, but it is **not** the login client — it
+contains none of the `LOGIN.INI` key strings. Every other client binary is unpacked and
+irrelevant (`wzSound`/`binkw32` flag as high-entropy only because of their data sections).
+
+**The working route is a memory dump of the running client.** MPRESS decompresses in-place well
+under a second after launch, so the unpacked image is available almost immediately. Confirmed:
+
+- `OpenProcess(PROCESS_VM_READ|PROCESS_QUERY_INFORMATION)` on `Sungame.exe` **succeeds** —
+  GameGuard did not block it. The dumper must be **elevated**, because the client is.
+- Dumping VA `0x00400000` + `0x13E4000` yields **20,856,832 bytes across 3 regions, zero read
+  failures**, reproducibly (two dumps 12s apart were byte-identical in every region checked).
+- The result verifies as genuine: code-region entropy drops to **6.644** (normal x86), and the
+  `LOGIN.INI` key strings are present.
+
+Dump in **virtual layout** (file offset N == VA `0x400000 + N`) so RVAs index straight in.
+
+**The dump and its tooling are kept outside this repo** (a 20 MB image of a copyrighted binary
+does not belong in git) at:
+
+```
+Classic\Development\Tools\Client Analysis\
+    dump\Sungame-unpacked-2026-09-01.bin     SHA256 3578862...B6D4A71A
+    tools\Launch-And-Dump.ps1                run elevated; regenerates a dump in ~30s
+    tools\Dump-Image.ps1  PeInfo.java  PeStrings.java  DumpScan.java
+    README.md                                load instructions + subcommand reference
+```
+
+Two dumps taken 12s apart in the same run hashed identical, so the image is stable once
+unpacked. Load into Ghidra as **Raw Binary, x86 / 32-bit / little-endian, base `0x400000`** —
+that is where this should continue.
+
+### 9.2 Confirmed at instruction level
+
+The login host composition in §4 is now proven, not inferred. Format string `"%s%d.%s"` lives at
+VA `0x00C05144` (exactly one occurrence) and has exactly one xref, at VA `0x0043E393`, which
+pushes `IP_HEAD`, `index + 1`, and `IP_TAIL` in that order. So on that path the address really is
+`HEAD + <index> + "." + TAIL`, and `IP_HEAD = 127.0.0.1` would compose to `127.0.0.11.`
+
+**But that is only the `LOGIN_SERVER_TYPE == 2` branch.** Decompiling the whole connect routine
+`FUN_0043e2be` shows it is gated:
+
+```c
+if (*(int *)(cfg + 0x474) == 2) {            // LOGIN_SERVER_TYPE == 2
+    count = *(int *)(cfg + 0x4b4);            // SERVICE_LOGIN_SERVER_NUM
+    ... build 0..count-1, then 10000 random swaps ...   // shuffles the server order
+    do {
+        host = FUN_0043c33b("%s%d.%s", IP_HEAD, idx[i] + 1, IP_TAIL);
+        port = *(int *)(cfg + 0x4b0);         // SERVICE_LOGIN_SERVER_PORT
+        ... store host at +0x4BC, port at +0x4D8 ...
+        if (FUN_007a2100(3, c_str(host), port, 2, 1) != 0) break;   // 3 = AUTH slot
+    } while (++i < count);
+}
+// LOGIN_SERVER_TYPE != 2 -> a completely different path:
+addr = *(int *)(cfg + 0x470);
+FUN_007a2100(3, FUN_00477efa(), addr, 2, 1);
+```
+
+So **§4's open question is answered the other way**: `LOGIN_SERVER_TYPE = 1` selects a different
+address scheme entirely — a different config field (`+0x470`) and a different host source
+(`FUN_00477efa`), with no index-and-dot composition. A direct address *is* possible; the earlier
+"a bare IP cannot be given this way" reading came from seeing only the `TYPE == 2` branch in raw
+hex and is **wrong**. §4's second and third `LOGIN.INI` attempts (`TYPE = 1`, `IP_HEAD =
+127.0.0.1`) were never actually put in front of a client — they are worth retrying.
+
+Also new: the `TYPE == 2` path **randomly shuffles** the server list before trying entries in
+order. Invisible with `NUM = 1`, but it means server choice is not deterministic with more.
+
+### 9.3 Map of what has been located
+
+| what | VA |
+|---|---|
+| winsock IAT block (rebuilt by the stub) | `0x00BF5604` .. `0x00BF563C` |
+| `WSASend` / `WSARecv` slots | `0x00BF5604` / `0x00BF5628` |
+| `WSASend` / `WSARecv` 7-arg thunks | `0x007FE4C0` / `0x007FE4F0` (one caller each) |
+| socket receive method | `0x007FD7F0` (two callers) |
+| auth connection manager (connect, disconnect, logging) | `0x0043D700` .. `0x0043E500` |
+| its vtable / second vtable | `0x00C0584C` / `0x00C05848` |
+| `[Network] AUTHSERVER ...` log strings | `0x00C0514C`, `0x00C05180`, `0x00C051B4`, `0x00C052EC` |
+
+### 9.4a Ghidra is set up — reuse it, do not redo it
+
+Ghidra 12.1.3 is installed at `Classic\Development\Tools\ghidra_12.1.3_PUBLIC` and the dump is
+**already imported and fully analysed** (38,212 functions recovered) in
+`Client Analysis\ghidra-project\SungameClassic`. Analysis took ~7 minutes and does not need
+repeating — `tools\ghidra\Run-Headless.ps1` passes `-process ... -noanalysis` on every later run,
+which starts in seconds.
+
+**It must run on JDK 21, not 25.** Ghidra 12.1.3 bundles Apache Felix 7.0.5, whose
+`handleJavaVersionChange()` throws `NullPointerException: dataFile is null` ("The data file must
+be inside the data dir") on JDK 25 and kills headless before any analysis. `Run-Headless.ps1`
+pins `C:\Program Files\Java\jdk-21`. If it ever fails that way again, also delete
+`%APPDATA%\ghidra\ghidra_12.1.3_PUBLIC\osgi`.
+
+Scripts in `tools\ghidra\`: `DecompileAt` (decompile a list of VAs), `CallersUp` (upward call
+graph), `FindDispatch` (every computed jump with its true case count, from Ghidra's recovered
+switch data), `FindCmpConst` (functions containing a real `CMP` against given constants),
+`Find-And-Decompile.ps1` (chains FindDispatch into DecompileAt).
+
+### 9.4 NOT found — the opcode dispatch
+
+The handler for `A2U_ansVerify` was **not** located, by byte scanning *or* by full Ghidra
+analysis. The negative results are recorded so they are not repeated:
+
+**Exhaustive scans that came back empty.**
+
+- **All 175 computed jumps with >= 8 cases** (Ghidra's recovered switch targets, so case counts
+  are exact). None dispatches AUTH opcodes. The best-ranked, `FUN_00544746` (61 cases, and it
+  references 0x33/0x0E/0x1A), is an object-construction loop — `operator new(size)` per case
+  storing into `[this + 0x102a0 + 4i]`.
+- **All 382 functions containing a real `CMP` against the AUTH opcode set.** The three best are
+  all false positives: `FUN_008049d0` matched every constant because it tests a *contiguous* run
+  `0x0d..0x14, 0x1a, ... 0x31,0x32,0x33` (character classification); `FUN_004c5a34` compares
+  equipment-slot indices (`FUN_008053f0(0xd/0xe/0xf)`, item id `0x374`); `FUN_004c5cb5`'s table is
+  an enum→value map.
+- **The +0x102A0 registry** (61 objects, accessor `FUN_0040f760`, bounds-checked
+  `[ecx + eax*4 + 0x102A0]`) looked like a handler table but its callers are UI paths — it is a
+  UI window registry.
+
+**Structural facts established.**
+
+- The auth vtable at `0x00C0584C` belongs to the **login-screen UI class**, not a network class:
+  its methods compare against `0x100` (`WM_KEYDOWN`), `0x0d` (`VK_RETURN`), `0x1c`, `0x1f`, `0x20`.
+  It owns the connect routine only because the login screen initiates the connection.
+- The receive path is a **generic overlapped-I/O engine**, not game code:
+  `FUN_007fe290` (worker; `WaitForMultipleObjects` / `GetOverlappedResult`) → `FUN_007fe000` →
+  `FUN_007fd7f0` → `WSARecv` thunk `0x007FE4F0`. Connect and receive meet at `FUN_007a2100`.
+  Completed reads reach game code through a virtual call, which is why no opcode constant appears
+  anywhere along this path.
+
+**Conclusion:** the client does not dispatch AUTH packets by a switch on the opcode, nor by
+literal comparison against `0x33`/`0x02`, in any form these scans can see. The dispatch is
+indirect — a virtual call on a per-connection handler object. Finding it needs the *dynamic*
+approach: breakpoint the `WSARecv` thunk at `0x007FE4F0` (or `FUN_007fd7f0`) in a debugger and
+step the return path once, with a live `A2U_ansReady` in the buffer. That reads the answer off
+the running client in one pass instead of inferring it statically. OllyDBG 1.10 + OllyDump are
+already in `Tools\`; GameGuard tolerated memory reads, but whether it tolerates a debugger is
+untested.
+
+Earlier ruled out (byte-scan era), kept so it is not re-searched:
+
+- The auth connection-manager module contains **no** jump table bounded at `0x1A` and **no**
+  comparison against any of `0x1A`, `0x0E`, `0x02` — it handles connect/disconnect/logging only,
+  not packet parsing.
+- Of 316 jump tables in the image, the two with 27 entries and bound `0x1A` are both something
+  else. `0x004C5CB5`'s targets are a 340-byte cluster (an enum→value map). `0x0069B2D1` is guarded
+  by `[esi+1]==0x27 && [esi+2]==0x04` and indexes on `[esi+4] - 1`, so it is a different
+  subsystem, not category `0x33`.
+- No `mov word ptr [...], 0133h`, so the `33 01` header is assembled via a helper rather than
+  written as a constant.
+
+Finishing this needs a real disassembler on the dump (Ghidra is free and handles a 20 MB flat
+image fine, loaded as raw x86-32 at base `0x400000`). Hexdump archaeology got as far as it
+usefully can.
+
+### 9.5 Hypothesis this raises: the reply opcode itself may be wrong
+
+`A2U_ansVerify = 0x02` comes from the **old server code, not from any capture.** The client has
+confirmed `0x00` (it accepts our `A2U_ansReady`) and `0x01` (it sends `U2A_askVerify`) — it has
+never confirmed the opcode of the answer.
+
+Six candidates (§3.4) with bodies of 0, 1, 2, 4, 8 and 35 bytes all failed *identically*: not one
+inbound byte, no progression. A body-shape problem would not normally look that uniform. An
+**opcode** the client does not recognise would — the packet is dropped before the body is ever
+examined.
+
+**This is cheaper to test than the remaining body candidates:** sweep the opcode with a fixed
+body instead of sweeping the body with a fixed opcode. Same one-launch-per-candidate cost.
+
+### 9.6 The old `Ashime/LoginServer` repo — what it does and does not settle
+
+Checked against <https://github.com/Ashime/LoginServer> (the project our packet classes were
+ported from). It cannot supply the Classic `ansVerify` format, but it settles several things.
+
+**Its `ansVerify` is byte-identical to ours — it is the *source* of our implementation, not
+independent evidence.** `AnsVerifyPacket.createPacket` → `MessageEncoder.createShortPacket(0x33,
+0x02, result)` → `Convert.intToByteArray` (2 bytes, big-endian) → `Utility.flip(0,1)`. Wire:
+`03 00 | 33 02 00`. That is exactly the `0300330200` our `ClientPacketEncoder` logs today.
+
+**It targeted a different client generation — this is the important finding.** Its
+`VerifyIpProtocol.verify()` tests the askVerify payload for the *client protocol number* and the
+*server IP*:
+
+```java
+String serverIP = IniFile.getConnectionIP().replaceAll(".", "");
+String clientProtocol = IniFile.getProtocol().replaceAll(".", "");
+return hexPacket.contains(clientProtocol) && hexPacket.contains(serverIP);
+```
+
+The Classic 2.6.0.1 client's `U2A_askVerify` contains **neither** — it carries `07 01 01` plus a
+32-byte hostname (§2). Two different request layouts means two different client generations, so
+there is no reason to expect the *response* layout to have survived either. This both explains
+why `33 02 00` fails here despite that older stack reaching Channel Select, and undercuts the
+assumption that the Classic reply is a 3-byte result at opcode `0x02` at all (§9.5).
+
+**That `verify()` also never actually validated anything.** `replaceAll(".", "")` uses an
+unescaped `.`, which matches *every* character — both strings collapse to `""`, and
+`contains("")` is always true. It always returned true, so the old server always replied `0x00`.
+Its success tells us only that an EP1-era client accepted result byte `0x00`; the comparison our
+`VerifyUser` originally ported was dead code in the original too.
+
+**What it does confirm:**
+
+- **§1 independently.** It also puts a 2-byte **little-endian** length on the wire (big-endian
+  bytes, then `flip(0,1)`). Two unrelated implementations agree — the LE finding is solid.
+- `Category.LOGIN = 0x33`, matching `Category.AUTH`.
+- The TEA key in `ansReady` is **4 bytes** (`SessionHandler`/`Tea.generateKey`), as we send.
+- **Nothing is encrypted at the verify stage** — `MessageEncoder` has no cipher path at all. This
+  does not rule out encryption in the Classic client, but there is no precedent for it here.
+
+**Still worth mining later:** `AnsAuthUser`, `AnsServerList`, `AnsServerSelect` and `Tea.java`,
+once verify is solved — with the same caveat that they are EP1-era layouts.

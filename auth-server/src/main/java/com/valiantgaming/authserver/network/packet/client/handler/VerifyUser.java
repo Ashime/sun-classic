@@ -9,10 +9,18 @@ import java.util.Arrays;
 /**
  * Decodes {@code U2A_askVerify}. The layout below is confirmed against a live client
  * (see {@code CLIENT-PROTOCOL-NOTES.md} §2) - the 35-byte payload is a 3-byte prefix
- * ({@code 07 01 01}) followed by a 32-byte null-padded field carrying the login hostname the
- * client composed from {@code LOGIN.INI}'s {@code SERVICE_LOGIN_SERVER_IP_HEAD}/{@code _IP_TAIL},
- * truncated to 15 characters - e.g. {@code connected1.sunc} for
- * {@code connected1.sunclassic.webzen.co.kr}.
+ * ({@code 07 01 01}) followed by a 32-byte null-padded field carrying the login address the
+ * client dialled.
+ *
+ * <p>What that field holds depends on {@code LOGIN.INI}'s {@code LOGIN_SERVER_TYPE} (§4), and
+ * <b>both forms have been seen on the wire</b> - do not assume either:
+ * <ul>
+ *   <li>{@code TYPE = 2} - the client composes
+ *       {@code IP_HEAD + <index> + "." + IP_TAIL} and truncates to 15 characters, so
+ *       {@code connected1.sunclassic.webzen.co.kr} arrives as {@code connected1.sunc}.</li>
+ *   <li>{@code TYPE = 1} - the current configuration - the client sends
+ *       {@code LOGIN_SERVER_IP} verbatim, e.g. {@code 127.0.0.1}.</li>
+ * </ul>
  */
 @Log4j2
 public class VerifyUser
