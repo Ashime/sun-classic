@@ -295,6 +295,13 @@ which already prevents the live login server being used.
   stopgap. An attempt to also pass `-IP:` was made and reverted — it did not help, and the
   address comes from `LOGIN.INI` anyway (§4). Note the client's own `start-game.bat` uses
   `-Username:` where `Protocol.java`'s capture note says `-User:`; unresolved which is correct.
+
+  **Where the client parses it: `FUN_005552c3`** (found 2026-09-01, incidentally). It calls
+  `CommandLineToArgvW`, converts wide→multibyte, and tokenises on `0x7c` (`'|'`) — i.e. it is the
+  decoder for the `42126697|AioHaruka||<token>|2|1|1|2|2` handoff string. It also reads
+  `GetModuleFileName` into a `0x104` buffer. When the token format has to be worked out, decompile
+  this function rather than guessing: it defines exactly how many `|` fields the client expects
+  and what it does with each. Not yet analysed field-by-field.
 - **`mvnw -pl <module> spring-boot:run` does not work.** `spring-boot:run` sets the working
   directory to the *module* folder, but every `*Config` class resolves its ini relative to the
   repo root, so it dies with
