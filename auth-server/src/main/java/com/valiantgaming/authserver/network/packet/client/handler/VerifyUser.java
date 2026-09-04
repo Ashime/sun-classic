@@ -1,5 +1,6 @@
 package com.valiantgaming.authserver.network.packet.client.handler;
 
+import com.valiantgaming.authserver.config.AuthServerConfig;
 import com.valiantgaming.commons.utility.Utility;
 import lombok.extern.log4j.Log4j2;
 

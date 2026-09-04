@@ -5,6 +5,8 @@ import com.valiantgaming.authserver.network.packet.client.*;
 import com.valiantgaming.authserver.network.packet.client.handler.AuthUser;
 import com.valiantgaming.authserver.network.packet.client.handler.SrvSelect;
 import com.valiantgaming.authserver.network.packet.client.handler.VerifyUser;
+import com.valiantgaming.authserver.network.packet.client.launcher.AnsLauncherReady;
+import com.valiantgaming.authserver.network.packet.client.launcher.AnsVerifyVersion;
 import com.valiantgaming.authserver.network.packet.server.AskAuthUser;
 import com.valiantgaming.authserver.network.session.client.ClientSession;
 import com.valiantgaming.authserver.network.session.client.ClientSessionManager;
@@ -19,6 +21,7 @@ import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.log4j.Log4j2;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Dispatches both flows documented in {@code Protocol} that share this listener: the game
@@ -42,14 +45,50 @@ import java.io.IOException;
  * <p>Several of the game-client packets' real payload layouts are unconfirmed and their
  * answers are placeholders - see the class comments on {@code AnsVerify}/{@code AnsSrvList}/
  * {@code AnsSrvSelect} and on {@code AuthUser} for exactly what's still stubbed.
+ *
+ * <h2>Reading the log</h2>
+ * Every line carries a {@code [conn-N]} tag, and connections that never send a byte are logged
+ * at DEBUG rather than INFO. Both exist because this listener is not only spoken to by the game
+ * client: the launcher opens a persistent connection at startup ({@code NioClient}) <i>and</i>
+ * re-connects every five seconds as a reachability probe
+ * ({@code ServerHealthCheck#isReachable}), so at INFO the log used to be a stream of
+ * connect/disconnect pairs no different in shape from a real client's.
+ *
+ * <p>A heartbeat probe is now a DEBUG connect and a DEBUG close with {@code 0 packet(s)}; a real
+ * game client is the only thing that produces INFO {@code [conn-N] <- } lines. So "did the client
+ * answer our {@code A2U_ansVerify}?" is answered by whether {@code conn-N} logs a second inbound
+ * packet, and the close line for that same {@code conn-N} states the total either way.
  */
 @Log4j2
 public class ClientPacketHandler extends ChannelDuplexHandler
 {
+    /** Per-JVM connection counter, so every log line can name which connection it belongs to. */
+    private static final AtomicLong CONNECTION_COUNTER = new AtomicLong();
+
+    /**
+     * How many times one connection may be sent {@code AnsVerifyProbe}'s re-trigger. Diagnostic
+     * only, and only a runaway guard: the client re-verifies on every re-trigger, so without a
+     * bound the two would ping-pong forever, spin the log and wrap the candidate rotation. Sized to
+     * comfortably clear the 32-entry opcode sweep in one launch.
+     */
+    private static final int MAX_PROBE_RETRIGGERS = 40;
+
+    // One handler instance per channel (NioServer#initC2S news one up in initChannel), so these
+    // are per-connection state, not shared.
+    private final long connectionId = CONNECTION_COUNTER.incrementAndGet();
+    private long connectedAt;
+    private int packetsReceived;
+    private int probeRetriggersSent;
+
     @Override
     public void channelActive(ChannelHandlerContext ctx)
     {
-        log.info("Client connected from " + ctx.channel().remoteAddress());
+        connectedAt = System.nanoTime();
+
+        // DEBUG, not INFO: most connections here are the launcher's five-second reachability
+        // probe, which connects and closes without speaking. channelRead announces anything that
+        // actually says something.
+        log.debug("[conn-{}] Client connected from {}", connectionId, ctx.channel().remoteAddress());
 
         ClientSessionManager.getInstance().addSession(ctx);
         ClientSession session = ClientSessionManager.getInstance().getSession(ctx);
@@ -61,7 +100,12 @@ public class ClientPacketHandler extends ChannelDuplexHandler
     public void channelRead(ChannelHandlerContext ctx, Object msg)
     {
         byte[] message = (byte[]) msg;
-        log.info("Message: {}", Utility.byteArrayToHexString(message));
+
+        if(++packetsReceived == 1)
+            log.info("[conn-{}] First inbound packet from {} - this connection is a real client, not a health-check probe.",
+                    connectionId, ctx.channel().remoteAddress());
+
+        log.info("[conn-{}] <- #{} {}", connectionId, packetsReceived, Utility.byteArrayToHexString(message));
 
         ClientSession session = ClientSessionManager.getInstance().getSession(ctx);
 
@@ -71,7 +115,7 @@ public class ClientPacketHandler extends ChannelDuplexHandler
             {
                 case Protocol.L2A_askUnknown1:
                 {
-                    log.info("Launcher handshake started by {}", ctx.channel().remoteAddress());
+                    log.info("[conn-{}] Launcher handshake started by {}", connectionId, ctx.channel().remoteAddress());
 
                     ctx.writeAndFlush(new AnsLauncherReady().createPacket());
                     ctx.writeAndFlush(new AnsVerifyVersion().createPacket());
@@ -80,7 +124,14 @@ public class ClientPacketHandler extends ChannelDuplexHandler
                 case Protocol.U2A_askVerify:
                 {
                     byte[] payload = VerifyUser.decode(message);
-                    log.info("Received verify request, payload: {}", Utility.byteArrayToHexString(payload));
+                    log.info("[conn-{}] Received verify request, payload: {}", connectionId, Utility.byteArrayToHexString(payload));
+
+                    if(AuthServerConfig.isAnsVerifyProbe())
+                    {
+                        // Diagnostic mode: serve a different candidate per connection to find the
+                        // real response format. See AnsVerifyProbe.
+                        AnsVerifyProbe.Attempt attempt = AnsVerifyProbe.next(payload);
+                        log.info("[conn-{}] PROBE serving ansVerify candidate {} -> {}", connectionId, attempt.label(), attempt.hex());
 
                     if(AuthServerConfig.isAnsVerifyProbe())
                     {
@@ -107,7 +158,7 @@ public class ClientPacketHandler extends ChannelDuplexHandler
 
                     if(dbChannel == null || !dbChannel.isActive())
                     {
-                        log.error("No active connection to Database Server - cannot authenticate {}", credentials.username());
+                        log.error("[conn-{}] No active connection to Database Server - cannot authenticate {}", connectionId, credentials.username());
                         ctx.writeAndFlush(AnsAuthUser.createPacket(false));
                         break;
                     }
@@ -120,11 +171,8 @@ public class ClientPacketHandler extends ChannelDuplexHandler
                 }
                 case Protocol.U2A_askSrvList:
                 {
-                    if(!session.isAuthenticated())
-                    {
-                        log.warn("Client {} asked for the server list before authenticating - dropping.", ctx.channel().remoteAddress());
+                    if(!isAllowed(session, ctx, "the server list"))
                         return;
-                    }
 
                     AnsSrvList ansSrvList = new AnsSrvList();
                     ctx.writeAndFlush(ansSrvList.createServerListPacket());
@@ -133,21 +181,18 @@ public class ClientPacketHandler extends ChannelDuplexHandler
                 }
                 case Protocol.U2A_askSrvSelect:
                 {
-                    if(!session.isAuthenticated())
-                    {
-                        log.warn("Client {} asked to select a server before authenticating - dropping.", ctx.channel().remoteAddress());
+                    if(!isAllowed(session, ctx, "select a server"))
                         return;
-                    }
 
                     byte[] payload = SrvSelect.decode(message);
-                    log.info("Received server select request, payload: {}", Utility.byteArrayToHexString(payload));
+                    log.info("[conn-{}] Received server select request, payload: {}", connectionId, Utility.byteArrayToHexString(payload));
 
                     ctx.writeAndFlush(new AnsSrvSelect().createPacket());
                     break;
                 }
                 default:
                 {
-                    log.warn("Unknown packet! Packet: {}", Utility.byteArrayToHexString(message));
+                    log.warn("[conn-{}] Unknown packet! Packet: {}", connectionId, Utility.byteArrayToHexString(message));
                 }
             }
         }
@@ -207,6 +252,38 @@ public class ClientPacketHandler extends ChannelDuplexHandler
 //        }
     }
 
+    /**
+     * Whether a post-login packet should be served. Normally that means the session authenticated;
+     * <b>while the ansVerify probe is on, it does not</b>.
+     *
+     * <p>The probe reaches these packets by sending {@code 33 0E 00} ({@code A2U_ansAuthUser},
+     * success) directly, which the client acts on without ever sending {@code U2A_askAuthUser} - so
+     * the session never learns it is authenticated and the gate rejected exactly the traffic the
+     * probe exists to produce (see {@code CLIENT-PROTOCOL-NOTES.md} §14.2 and §14.3).
+     *
+     * <p>Tied to the probe flag rather than a new setting of its own because the two are inseparable
+     * in practice: without the probe the client never gets past verify, so it never reaches here
+     * unauthenticated anyway. That also means this relaxation cannot be left on by accident in
+     * production - {@code ANS_VERIFY_PROBE} is off there, and it already announces itself loudly.
+     */
+    private boolean isAllowed(ClientSession session, ChannelHandlerContext ctx, String what)
+    {
+        if(session.isAuthenticated())
+            return true;
+
+        if(AuthServerConfig.isAnsVerifyProbe())
+        {
+            log.warn("[conn-{}] PROBE: client {} asked for {} without authenticating - answering anyway.",
+                    connectionId, ctx.channel().remoteAddress(), what);
+            return true;
+        }
+
+        log.warn("[conn-{}] Client {} asked for {} before authenticating - dropping.",
+                connectionId, ctx.channel().remoteAddress(), what);
+
+        return false;
+    }
+
     @Override
     public void channelInactive(ChannelHandlerContext ctx)
     {
@@ -237,7 +314,7 @@ public class ClientPacketHandler extends ChannelDuplexHandler
         }
         else
         {
-            log.error("Unexpected error on channel {}", ctx.channel().remoteAddress(), cause);
+            log.error("[conn-{}] Unexpected error on channel {}", connectionId, ctx.channel().remoteAddress(), cause);
         }
 
         ctx.close();

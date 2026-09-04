@@ -1,4 +1,4 @@
-package com.valiantgaming.authserver.network.packet.client;
+package com.valiantgaming.authserver.network.packet.client.launcher;
 
 import com.valiantgaming.authserver.config.AuthServerConfig;
 import com.valiantgaming.commons.network.packet.Category;

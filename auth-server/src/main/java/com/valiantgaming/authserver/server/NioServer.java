@@ -154,8 +154,20 @@ public class NioServer
             @Override
             protected void initChannel(Channel ch)
             {
-                // UniqueIpFilter only allows one IP per channel, so a client cannot connect more than once.
-                ch.pipeline().addLast("uniqueIpFilter", new UniqueIpFilter());
+                // UniqueIpFilter only allows one connection per remote IP - a second one is closed
+                // the moment it is accepted.
+                //
+                // This is now gated on [NETWORK] UNIQUE_IP_FILTER, which the ini has always carried
+                // and AuthServerConfig has always read, but which was never consulted here: the
+                // filter was added unconditionally, so setting the flag FALSE did nothing.
+                //
+                // It has to be switchable because on a local dev box the launcher and the game
+                // client are both 127.0.0.1, and the launcher deliberately holds its AuthServer
+                // connection open across the handoff (LauncherController#onStartGame). With the
+                // filter on, that connection owns the address and the game client's connection is
+                // closed before it can send U2A_askVerify - see CLIENT-PROTOCOL-NOTES.md section 10.
+                if(AuthServerConfig.isUniqueIpFilter())
+                    ch.pipeline().addLast("uniqueIpFilter", new UniqueIpFilter());
 
                 // Inactivity Handler. Ping the client every # seconds of inactivity and DC client after # seconds.
                 ch.pipeline().addLast("idleStateHandler", new IdleStateHandler(0, 0, disconnect));

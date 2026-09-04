@@ -53,5 +53,8 @@ Data/
 Logs/
 **/Logs/
 
+### Diagnostic probe state - a runtime cursor, not configuration (see AnsVerifyProbe) ###
+Config/AuthServer/AnsVerifyProbe.state
+
 ### IntelliJ build artifacts (jars are built from source; no need to version them) ###
 out/
