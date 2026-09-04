@@ -7,6 +7,7 @@ import com.valiantgaming.authserver.network.packet.server.handler.GetAuthUser;
 import com.valiantgaming.authserver.network.packet.server.handler.GetServerInfo;
 import com.valiantgaming.authserver.network.session.client.ClientSession;
 import com.valiantgaming.authserver.network.session.client.ClientSessionManager;
+import com.valiantgaming.authserver.network.session.server.GameServerRegistry;
 import com.valiantgaming.authserver.network.session.server.PendingAuthRequests;
 import com.valiantgaming.authserver.network.session.server.ServerSession;
 import com.valiantgaming.authserver.network.session.server.ServerSessionManager;
@@ -87,6 +88,10 @@ public class ServerPacketHandler extends ChannelDuplexHandler
         {
             ServerInfo serverInfo = GetServerInfo.decode(message);
             log.info("Received ServerInfo response from " + ctx.channel().remoteAddress() + ": " + serverInfo);
+
+            // Kept rather than just logged: this is the row AnsSrvList offers the client, and it is
+            // the only live server data auth-server has - see GameServerRegistry.
+            GameServerRegistry.setGameServer(serverInfo);
         }
         else if(message[1] == Protocol.S2S_ansAuthUser)
         {
