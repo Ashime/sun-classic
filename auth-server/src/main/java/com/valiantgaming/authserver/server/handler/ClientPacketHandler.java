@@ -133,36 +133,21 @@ public class ClientPacketHandler extends ChannelDuplexHandler
                         AnsVerifyProbe.Attempt attempt = AnsVerifyProbe.next(payload);
                         log.info("[conn-{}] PROBE serving ansVerify candidate {} -> {}", connectionId, attempt.label(), attempt.hex());
 
+                    if(AuthServerConfig.isAnsVerifyProbe())
+                    {
+                        // Diagnostic mode: serve a different candidate per connection to find the
+                        // real response format. See AnsVerifyProbe.
+                        AnsVerifyProbe.Attempt attempt = AnsVerifyProbe.next(payload);
+                        log.info("PROBE serving ansVerify candidate {} -> {}", attempt.label(), attempt.hex());
+
                         session.setAnsVerifyCandidate(attempt.label());
                         session.setAnsVerifySentAt(System.nanoTime());
 
-                        // Flushed one at a time rather than written and flushed once: the opcode
-                        // burst candidates send eight replies here, and with TCP_NODELAY each flush
-                        // is its own segment. Coalescing them into one would make a burst also a
-                        // test of whether the client reassembles several frames from a single read,
-                        // which is not what is being measured.
-                        for(byte[] packet : attempt.packets())
-                            ctx.writeAndFlush(packet);
-
-                        // Then nudge the client into asking again, so the next candidate can be
-                        // served on this same connection instead of costing another client launch
-                        // (see AnsVerifyProbe#RETRIGGER). Budgeted because the client answers every
-                        // re-trigger with a fresh askVerify - left unbounded the two would loop.
-                        if(attempt.retrigger() && probeRetriggersSent < MAX_PROBE_RETRIGGERS)
-                        {
-                            probeRetriggersSent++;
-                            ctx.writeAndFlush(AnsVerifyProbe.retriggerPacket());
-                        }
-                        else if(attempt.retrigger())
-                        {
-                            log.warn("[conn-{}] PROBE re-trigger budget of {} exhausted - stopping here. " +
-                                            "Relaunch the client to continue the rotation.",
-                                    connectionId, MAX_PROBE_RETRIGGERS);
-                        }
+                        ctx.writeAndFlush(attempt.packet());
                     }
                     else
                     {
-                        ctx.writeAndFlush(AnsVerify.createPacket(message));
+                        ctx.writeAndFlush(AnsVerify.createPacket(payload));
                     }
                     break;
                 }
@@ -302,21 +287,7 @@ public class ClientPacketHandler extends ChannelDuplexHandler
     @Override
     public void channelInactive(ChannelHandlerContext ctx)
     {
-        long openMillis = (System.nanoTime() - connectedAt) / 1_000_000L;
-
-        if(packetsReceived == 0)
-        {
-            // Silent connection: the launcher's reachability probe, or a connection closed before
-            // it could speak (e.g. UniqueIpFilter rejecting it - see NioServer#initC2S). Neither is
-            // worth an INFO line, and at INFO they used to drown out real client traffic.
-            log.debug("[conn-{}] {} closed after {}ms without sending anything.",
-                    connectionId, ctx.channel().remoteAddress(), openMillis);
-        }
-        else
-        {
-            log.info("[conn-{}] {} disconnected after {}ms having sent {} packet(s).",
-                    connectionId, ctx.channel().remoteAddress(), openMillis, packetsReceived);
-        }
+        log.info("Client at {} disconnected.", ctx.channel().remoteAddress());
 
         // Read the session before removing it - how long the client tolerated our ansVerify is
         // the probe's actual measurement, and it is only knowable at close time.
@@ -325,8 +296,7 @@ public class ClientPacketHandler extends ChannelDuplexHandler
         if(session != null && session.getAnsVerifyCandidate() != null)
         {
             long elapsedMillis = (System.nanoTime() - session.getAnsVerifySentAt()) / 1_000_000L;
-            log.info("[conn-{}] PROBE result: candidate {} -> disconnected after {}ms, {} packet(s) received in total.",
-                    connectionId, session.getAnsVerifyCandidate(), elapsedMillis, packetsReceived);
+            log.info("PROBE result: candidate {} -> disconnected after {}ms", session.getAnsVerifyCandidate(), elapsedMillis);
         }
 
         ClientSessionManager.getInstance().removeSession(ctx);
@@ -340,7 +310,7 @@ public class ClientPacketHandler extends ChannelDuplexHandler
             // Expected: the client's process died, the network dropped, or (most commonly) a
             // health-check probe closed the socket without reading what we'd just written
             // (see ServerHealthCheck.isReachable) - not an application bug, so DEBUG rather than WARN.
-            log.debug("[conn-{}] Connection to {} was reset: {}", connectionId, ctx.channel().remoteAddress(), cause.getMessage());
+            log.debug("Connection to {} was reset: {}", ctx.channel().remoteAddress(), cause.getMessage());
         }
         else
         {
